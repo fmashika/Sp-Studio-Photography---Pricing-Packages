@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import {
   PricingPackage,
   ContactInfo,
@@ -9,6 +9,7 @@ import {
   CurrencyType,
   ThemeMode,
   SavedCustomerDetails,
+  LiveSyncStatus,
 } from '../types';
 import {
   packagesData,
@@ -29,6 +30,12 @@ interface AppContextType {
   formatPrice: (rawPrice: number, fallbackTzs?: string) => string;
   packageTitleFontSizePercent: number;
   setPackageTitleFontSizePercent: (val: number) => void;
+
+  // Live System Sync & Version
+  syncStatus: LiveSyncStatus;
+  systemVersion: string;
+  lastSyncTime: string | null;
+  pushLiveUpdate: () => Promise<boolean>;
 
   // Customer autofill & persistence
   savedCustomer: SavedCustomerDetails | null;
@@ -97,12 +104,20 @@ const STORAGE_KEYS = {
   ORDERS: 'sp_studio_orders_v4',
   ADMIN_AUTH: 'sp_studio_admin_auth_v4',
   ADMIN_PWD: 'sp_studio_admin_pwd_v4',
+  SYSTEM_VERSION: 'sp_studio_sys_ver_v4',
 };
 
 const DEFAULT_ADMIN_PASSWORD = 'admin'; // Default initial password
 const TZS_TO_USD_RATE = 2600; // Realistic conversion rate for Tanzania Shillings
+const CURRENT_APP_VERSION = 'v4.3.0';
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  // Sync state
+  const [syncStatus, setSyncStatus] = useState<LiveSyncStatus>('synced');
+  const [lastSyncTime, setLastSyncTime] = useState<string | null>(() => new Date().toLocaleTimeString());
+  const broadcastChannelRef = useRef<BroadcastChannel | null>(null);
+  const isInitialMount = useRef(true);
+
   // 1. Theme State (Dark by default, toggles to Light)
   const [theme, setTheme] = useState<ThemeMode>(() => {
     try {
@@ -194,11 +209,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   });
 
-  // 8. Orders State (Starts EMPTY for clean admin view without demo noise)
+  // 8. Orders State
   const [orders, setOrders] = useState<BookingOrder[]>(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEYS.ORDERS);
-      return saved ? JSON.parse(saved) : initialOrders; // initialOrders is []
+      return saved ? JSON.parse(saved) : initialOrders;
     } catch {
       return [];
     }
@@ -212,6 +227,144 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       return false;
     }
   });
+
+  // Broadcast sync helper
+  const broadcastState = useCallback((statePayload: any) => {
+    try {
+      if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
+        if (!broadcastChannelRef.current) {
+          broadcastChannelRef.current = new BroadcastChannel('sp_studio_live_sync_v4');
+        }
+        broadcastChannelRef.current.postMessage({
+          type: 'LIVE_UPDATE',
+          payload: statePayload,
+          timestamp: Date.now(),
+        });
+      }
+    } catch {
+      // Ignore broadcast errors in restricted environments
+    }
+  }, []);
+
+  // Direct Live Server Publish function
+  const pushLiveUpdate = useCallback(async (): Promise<boolean> => {
+    try {
+      setSyncStatus('syncing');
+      const payload = {
+        categories,
+        packages,
+        terms,
+        contacts,
+        orders,
+        packageTitleFontSizePercent,
+        version: CURRENT_APP_VERSION,
+      };
+
+      const res = await fetch('/api/system/sync', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      if (res.ok) {
+        setSyncStatus('synced');
+        setLastSyncTime(new Date().toLocaleTimeString());
+        broadcastState(payload);
+        return true;
+      }
+      setSyncStatus('offline');
+      return false;
+    } catch (err) {
+      console.warn('Live API sync offline/fallback mode active:', err);
+      setSyncStatus('offline');
+      return false;
+    }
+  }, [categories, packages, terms, contacts, orders, packageTitleFontSizePercent, broadcastState]);
+
+  // Initial Fetch from Server (Live Cloud System)
+  useEffect(() => {
+    let isMounted = true;
+
+    const fetchLiveSystem = async () => {
+      try {
+        const res = await fetch('/api/system');
+        if (!res.ok) return;
+        const json = await res.json();
+        if (isMounted && json.success && json.data) {
+          const {
+            categories: remoteCats,
+            packages: remotePkgs,
+            terms: remoteTerms,
+            contacts: remoteContacts,
+            orders: remoteOrders,
+            packageTitleFontSizePercent: remoteFontSize,
+          } = json.data;
+
+          if (Array.isArray(remoteCats) && remoteCats.length > 0) {
+            setCategories(remoteCats);
+            localStorage.setItem(STORAGE_KEYS.CATEGORIES, JSON.stringify(remoteCats));
+          }
+          if (Array.isArray(remotePkgs) && remotePkgs.length > 0) {
+            setPackages(remotePkgs);
+            localStorage.setItem(STORAGE_KEYS.PACKAGES, JSON.stringify(remotePkgs));
+          }
+          if (Array.isArray(remoteTerms) && remoteTerms.length > 0) {
+            setTerms(remoteTerms);
+            localStorage.setItem(STORAGE_KEYS.TERMS, JSON.stringify(remoteTerms));
+          }
+          if (remoteContacts && typeof remoteContacts === 'object') {
+            setContacts(remoteContacts);
+            localStorage.setItem(STORAGE_KEYS.CONTACTS, JSON.stringify(remoteContacts));
+          }
+          if (Array.isArray(remoteOrders)) {
+            setOrders(remoteOrders);
+            localStorage.setItem(STORAGE_KEYS.ORDERS, JSON.stringify(remoteOrders));
+          }
+          if (typeof remoteFontSize === 'number') {
+            setPackageTitleFontSizePercentState(remoteFontSize);
+            localStorage.setItem(STORAGE_KEYS.PACKAGE_TITLE_FONT_SIZE, String(remoteFontSize));
+          }
+          setSyncStatus('synced');
+          setLastSyncTime(new Date().toLocaleTimeString());
+        }
+      } catch {
+        // Fallback to local storage seamlessly
+      }
+    };
+
+    fetchLiveSystem();
+
+    // BroadcastChannel listener for instant cross-tab updates
+    if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
+      try {
+        broadcastChannelRef.current = new BroadcastChannel('sp_studio_live_sync_v4');
+        broadcastChannelRef.current.onmessage = (event) => {
+          if (event.data && event.data.type === 'LIVE_UPDATE' && event.data.payload) {
+            const p = event.data.payload;
+            if (Array.isArray(p.categories)) setCategories(p.categories);
+            if (Array.isArray(p.packages)) setPackages(p.packages);
+            if (Array.isArray(p.terms)) setTerms(p.terms);
+            if (p.contacts) setContacts(p.contacts);
+            if (Array.isArray(p.orders)) setOrders(p.orders);
+            if (typeof p.packageTitleFontSizePercent === 'number') {
+              setPackageTitleFontSizePercentState(p.packageTitleFontSizePercent);
+            }
+            setSyncStatus('synced');
+            setLastSyncTime(new Date().toLocaleTimeString());
+          }
+        };
+      } catch {
+        // Ignore channel setup error
+      }
+    }
+
+    return () => {
+      isMounted = false;
+      if (broadcastChannelRef.current) {
+        broadcastChannelRef.current.close();
+      }
+    };
+  }, []);
 
   // Sync to localStorage
   useEffect(() => {
@@ -232,31 +385,52 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEYS.CATEGORIES, JSON.stringify(categories));
-  }, [categories]);
+    if (!isInitialMount.current) {
+      pushLiveUpdate();
+    }
+  }, [categories, pushLiveUpdate]);
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEYS.TERMS, JSON.stringify(terms));
-  }, [terms]);
+    if (!isInitialMount.current) {
+      pushLiveUpdate();
+    }
+  }, [terms, pushLiveUpdate]);
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEYS.PACKAGES, JSON.stringify(packages));
-  }, [packages]);
+    if (!isInitialMount.current) {
+      pushLiveUpdate();
+    }
+  }, [packages, pushLiveUpdate]);
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEYS.CONTACTS, JSON.stringify(contacts));
-  }, [contacts]);
+    if (!isInitialMount.current) {
+      pushLiveUpdate();
+    }
+  }, [contacts, pushLiveUpdate]);
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEYS.ORDERS, JSON.stringify(orders));
-  }, [orders]);
+    if (!isInitialMount.current) {
+      pushLiveUpdate();
+    }
+  }, [orders, pushLiveUpdate]);
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEYS.PACKAGE_TITLE_FONT_SIZE, String(packageTitleFontSizePercent));
-    // Ensure documentElement font size is reset to normal
     if (typeof document !== 'undefined' && document.documentElement) {
       document.documentElement.style.fontSize = '';
     }
-  }, [packageTitleFontSizePercent]);
+    if (!isInitialMount.current) {
+      pushLiveUpdate();
+    }
+  }, [packageTitleFontSizePercent, pushLiveUpdate]);
+
+  useEffect(() => {
+    isInitialMount.current = false;
+  }, []);
 
   // Toggle Theme
   const toggleTheme = () => {
@@ -524,6 +698,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         logoutAdmin,
         changeAdminPassword,
         resetToDefaults,
+        syncStatus,
+        systemVersion: CURRENT_APP_VERSION,
+        lastSyncTime,
+        pushLiveUpdate,
       }}
     >
       {children}

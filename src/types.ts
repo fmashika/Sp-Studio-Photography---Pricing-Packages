@@ -72,6 +72,7 @@ export interface ContactInfo {
 }
 
 export type OrderStatus = 'new' | 'contacted' | 'confirmed' | 'completed' | 'cancelled';
+export type LiveSyncStatus = 'synced' | 'syncing' | 'offline';
 
 export interface BookingOrder {
   id: string;

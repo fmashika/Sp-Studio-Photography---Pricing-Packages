@@ -10,11 +10,7 @@ interface CategoryTabsProps {
 }
 
 const getCategoryDisplayName = (category: AppCategory): string => {
-  if (category.id === 'wedding') return 'WEDDING';
-  if (category.id === 'sendoff') return 'SEND OFF';
-  if (category.id === 'addition') return 'ADDITION SERVICE';
-  if (category.id === 'terms') return 'TERMS & CONDITION';
-  return category.name.toUpperCase();
+  return (category.name || '').toUpperCase();
 };
 
 export const CategoryTabs: React.FC<CategoryTabsProps> = (props) => {

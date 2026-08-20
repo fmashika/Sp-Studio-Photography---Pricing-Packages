@@ -65,7 +65,24 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
     resetToDefaults,
     packageTitleFontSizePercent,
     setPackageTitleFontSizePercent,
+    syncStatus,
+    systemVersion,
+    lastSyncTime,
+    pushLiveUpdate,
   } = useApp();
+
+  const [isPushingLive, setIsPushingLive] = useState(false);
+  const [pushSuccessBanner, setPushSuccessBanner] = useState(false);
+
+  const handleManualPushLive = async () => {
+    setIsPushingLive(true);
+    const ok = await pushLiveUpdate();
+    setIsPushingLive(false);
+    if (ok) {
+      setPushSuccessBanner(true);
+      setTimeout(() => setPushSuccessBanner(false), 3000);
+    }
+  };
 
   type TabType =
     | 'orders'
@@ -267,23 +284,58 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                 <span className="bg-[#eab308] text-black text-[9px] font-black px-2 py-0.5 rounded-md uppercase tracking-wider">
                   ADMIN WORKSPACE
                 </span>
+                <span className="hidden sm:inline-block bg-white/10 text-gray-300 text-[9px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider">
+                  {systemVersion}
+                </span>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
+          {/* Live Sync Status Indicator */}
+          <div className="hidden lg:flex items-center gap-2 bg-[#141414] border border-white/10 px-3 py-1.5 rounded-xl text-xs">
+            <span
+              className={`w-2 h-2 rounded-full ${
+                syncStatus === 'synced'
+                  ? 'bg-emerald-400 animate-pulse'
+                  : syncStatus === 'syncing'
+                  ? 'bg-[#eab308] animate-spin'
+                  : 'bg-amber-500'
+              }`}
+            />
+            <span className="text-gray-300 text-[11px] font-medium">
+              {syncStatus === 'synced'
+                ? `Live Synced (${lastSyncTime || 'now'})`
+                : syncStatus === 'syncing'
+                ? 'Syncing live app...'
+                : 'Direct Mode'}
+            </span>
+          </div>
+
+          {/* Instant Publish Button */}
+          <button
+            onClick={handleManualPushLive}
+            disabled={isPushingLive}
+            className="flex items-center gap-1.5 bg-[#eab308] hover:bg-[#f59e0b] disabled:opacity-50 text-black text-xs font-black px-3 sm:px-3.5 py-2 rounded-xl transition-all cursor-pointer shadow-sm active:scale-95"
+            title="Publish all categories and package changes directly to the live app with 0 delay"
+          >
+            <Sparkles className={`w-3.5 h-3.5 ${isPushingLive ? 'animate-spin' : ''}`} />
+            <span className="hidden sm:inline">{isPushingLive ? 'Publishing...' : 'Push to Live App'}</span>
+            <span className="sm:hidden">Push</span>
+          </button>
+
           <button
             onClick={() => {
               if (window.confirm('Reset all packages, categories (Wedding, Send Off, Addition Service, Terms), and demo orders to factory defaults?')) {
                 resetToDefaults();
               }
             }}
-            className="hidden md:flex items-center gap-1.5 bg-[#1a1a1a] hover:bg-[#262626] text-gray-300 text-xs px-3 py-2 rounded-xl border border-white/10 transition-colors cursor-pointer"
+            className="hidden xl:flex items-center gap-1.5 bg-[#1a1a1a] hover:bg-[#262626] text-gray-300 text-xs px-3 py-2 rounded-xl border border-white/10 transition-colors cursor-pointer"
             title="Reset to initial factory defaults"
           >
             <RefreshCw className="w-3.5 h-3.5 text-[#eab308]" />
-            <span>Reset Factory Data</span>
+            <span>Reset Factory</span>
           </button>
 
           <button
@@ -291,13 +343,21 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
               logoutAdmin();
               onClose();
             }}
-            className="flex items-center gap-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 px-3.5 py-2 rounded-xl text-xs font-bold transition-colors cursor-pointer"
+            className="flex items-center gap-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 px-3 py-2 rounded-xl text-xs font-bold transition-colors cursor-pointer"
           >
             <LogOut className="w-3.5 h-3.5" />
-            <span>Logout</span>
+            <span className="hidden sm:inline">Logout</span>
           </button>
         </div>
       </header>
+
+      {/* Push Success Toast Notification Banner */}
+      {pushSuccessBanner && (
+        <div className="bg-emerald-500/20 border-b border-emerald-500/30 text-emerald-300 px-4 py-2 text-center text-xs font-bold flex items-center justify-center gap-2 animate-in fade-in">
+          <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+          <span>All categories, packages, and settings published directly to live app with zero delay!</span>
+        </div>
+      )}
 
       {/* Main Body with Sidebar Tabs and Content */}
       <div className="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-6 sm:py-8 flex flex-col md:flex-row gap-6">
