@@ -44,8 +44,29 @@ function saveStateToDisk() {
       fs.mkdirSync(DATA_DIR, { recursive: true });
     }
     fs.writeFileSync(DATA_FILE, JSON.stringify(systemState, null, 2), 'utf-8');
+
+    // Also write directly to src/data/pricingData.ts so the code file is permanently synced
+    const pricingDataPath = path.join(process.cwd(), 'src', 'data', 'pricingData.ts');
+    if (systemState && (systemState.packages || systemState.categories)) {
+      const contacts = systemState.contacts || {};
+      const categories = systemState.categories || [];
+      const terms = systemState.terms || [];
+      const packages = systemState.packages || [];
+
+      const fileContent = `import { PricingPackage, ContactInfo, AppCategory, TermSection } from '../types';
+
+export const contactDetails: ContactInfo = ${JSON.stringify(contacts, null, 2)};
+
+export const defaultCategories: AppCategory[] = ${JSON.stringify(categories, null, 2)};
+
+export const defaultTerms: TermSection[] = ${JSON.stringify(terms, null, 2)};
+
+export const packagesData: PricingPackage[] = ${JSON.stringify(packages, null, 2)};
+`;
+      fs.writeFileSync(pricingDataPath, fileContent, 'utf-8');
+    }
   } catch (e) {
-    console.error('Error saving system_state.json:', e);
+    console.error('Error saving system state or updating pricingData.ts:', e);
   }
 }
 
