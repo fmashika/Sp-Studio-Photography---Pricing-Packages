@@ -1,15 +1,25 @@
-import React, { useState } from 'react';
+import React, { useState, Suspense, lazy } from 'react';
 import { Header } from './components/Header';
 import { CategoryTabs } from './components/CategoryTabs';
 import { PackageCard } from './components/PackageCard';
 import { TermsAndConditions } from './components/TermsAndConditions';
 import { Footer } from './components/Footer';
-import { BookingModal } from './components/BookingModal';
-import { LocationModal } from './components/LocationModal';
-import { AdminLoginModal } from './components/admin/AdminLoginModal';
-import { AdminPanel } from './components/admin/AdminPanel';
 import { AppProvider, useApp } from './context/AppContext';
 import { PricingPackage } from './types';
+
+// Performance optimization: Lazy load non-critical modals and heavy admin suites
+const BookingModal = lazy(() =>
+  import('./components/BookingModal').then((m) => ({ default: m.BookingModal }))
+);
+const LocationModal = lazy(() =>
+  import('./components/LocationModal').then((m) => ({ default: m.LocationModal }))
+);
+const AdminLoginModal = lazy(() =>
+  import('./components/admin/AdminLoginModal').then((m) => ({ default: m.AdminLoginModal }))
+);
+const AdminPanel = lazy(() =>
+  import('./components/admin/AdminPanel').then((m) => ({ default: m.AdminPanel }))
+);
 
 function MainLandingPage() {
   const { packages, categories, activeCategoryId, isAdminLoggedIn, theme } = useApp();
@@ -51,7 +61,11 @@ function MainLandingPage() {
 
   // If Admin Panel is opened and authenticated, display the full admin workspace
   if (isAdminPanelOpen && isAdminLoggedIn) {
-    return <AdminPanel onClose={() => setIsAdminPanelOpen(false)} />;
+    return (
+      <Suspense fallback={<div className="min-h-screen bg-[#080808] flex items-center justify-center text-white"><div className="w-8 h-8 border-2 border-[#eab308] border-t-transparent rounded-full animate-spin" /></div>}>
+        <AdminPanel onClose={() => setIsAdminPanelOpen(false)} />
+      </Suspense>
+    );
   }
 
   return (
@@ -136,28 +150,40 @@ function MainLandingPage() {
         />
       </div>
 
-      {/* Booking & Inquiry Modal */}
-      <BookingModal
-        pkg={selectedPackage}
-        isOpen={isBookingModalOpen}
-        onClose={() => setIsBookingModalOpen(false)}
-      />
+      {/* Booking & Inquiry Modal - Lazy loaded */}
+      <Suspense fallback={null}>
+        {isBookingModalOpen && (
+          <BookingModal
+            pkg={selectedPackage}
+            isOpen={isBookingModalOpen}
+            onClose={() => setIsBookingModalOpen(false)}
+          />
+        )}
+      </Suspense>
 
-      {/* Studio Location Modal */}
-      <LocationModal
-        isOpen={isLocationModalOpen}
-        onClose={() => setIsLocationModalOpen(false)}
-      />
+      {/* Studio Location Modal - Lazy loaded */}
+      <Suspense fallback={null}>
+        {isLocationModalOpen && (
+          <LocationModal
+            isOpen={isLocationModalOpen}
+            onClose={() => setIsLocationModalOpen(false)}
+          />
+        )}
+      </Suspense>
 
-      {/* Password-Protected Secret Admin Login Modal */}
-      <AdminLoginModal
-        isOpen={isAdminLoginOpen}
-        onClose={() => setIsAdminLoginOpen(false)}
-        onSuccess={() => {
-          setIsAdminLoginOpen(false);
-          setIsAdminPanelOpen(true);
-        }}
-      />
+      {/* Password-Protected Secret Admin Login Modal - Lazy loaded */}
+      <Suspense fallback={null}>
+        {isAdminLoginOpen && (
+          <AdminLoginModal
+            isOpen={isAdminLoginOpen}
+            onClose={() => setIsAdminLoginOpen(false)}
+            onSuccess={() => {
+              setIsAdminLoginOpen(false);
+              setIsAdminPanelOpen(true);
+            }}
+          />
+        )}
+      </Suspense>
     </div>
   );
 }

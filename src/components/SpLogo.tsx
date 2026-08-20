@@ -50,10 +50,13 @@ export const SpLogo: React.FC<SpLogoProps> = ({
     >
       <img
         src={imgSrc}
-        alt="SP Studio Logo"
+        alt="SP STUDIO - Photography & Videography Logo"
         width={dim}
         height={dim}
-        style={{ width: `${dim}px`, height: `${dim}px` }}
+        loading="eager"
+        decoding="async"
+        fetchPriority="high"
+        style={{ width: `${dim}px`, height: `${dim}px`, aspectRatio: '1/1' }}
         className="object-contain drop-shadow-[0_2px_12px_rgba(234,179,8,0.3)] transition-transform duration-300 hover:scale-105"
         referrerPolicy="no-referrer"
         crossOrigin="anonymous"
