@@ -6,6 +6,24 @@ import { createServer as createViteServer } from 'vite';
 const app = express();
 const PORT = 3000;
 
+// Middleware to disable HTTP caching and force instant fresh delivery
+app.use((req, res, next) => {
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+  res.setHeader('Surrogate-Control', 'no-store');
+  next();
+});
+
+// Periodic cache cleanup every 10 seconds to maintain maximum speed
+setInterval(() => {
+  try {
+    loadInitialState();
+  } catch (err) {
+    // Non-blocking cleanup log
+  }
+}, 10000);
+
 app.use(express.json({ limit: '10mb' }));
 
 // Persistence directory and file

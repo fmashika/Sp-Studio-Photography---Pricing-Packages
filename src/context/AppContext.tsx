@@ -305,13 +305,35 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   }, [broadcastState]);
 
-  // Initial Fetch from Server (Live Cloud System)
+  // Cache cleaner helper: Clears CacheStorage and stale cache artifacts
+  const clearBrowserCaches = useCallback(async () => {
+    try {
+      if (typeof window !== 'undefined' && 'caches' in window) {
+        const cacheKeys = await window.caches.keys();
+        await Promise.all(cacheKeys.map((key) => window.caches.delete(key)));
+      }
+    } catch {
+      // Non-blocking cleanup
+    }
+  }, []);
+
+  // Initial Fetch & 10-second Auto Cache Clear + System Revalidation
   useEffect(() => {
     let isMounted = true;
 
     const fetchLiveSystem = async () => {
       try {
-        const res = await fetch('/api/system');
+        // Clear caches to maximize loading speed and eliminate stale assets
+        await clearBrowserCaches();
+
+        const res = await fetch(`/api/system?_t=${Date.now()}`, {
+          cache: 'no-store',
+          headers: {
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0',
+          },
+        });
         if (!res.ok) return;
         const json = await res.json();
         if (isMounted && json.success && json.data) {
@@ -358,7 +380,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
     };
 
+    // Immediate execution on mount
     fetchLiveSystem();
+
+    // Clear caches and sync every 10 seconds to increase speed and maintain real-time freshness
+    const intervalId = setInterval(() => {
+      fetchLiveSystem();
+    }, 10000);
 
     // BroadcastChannel listener for instant cross-tab updates
     if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
@@ -392,11 +420,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     return () => {
       isMounted = false;
+      clearInterval(intervalId);
       if (broadcastChannelRef.current) {
         broadcastChannelRef.current.close();
       }
     };
-  }, []);
+  }, [clearBrowserCaches]);
 
   // Sync to localStorage
   useEffect(() => {
