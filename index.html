@@ -25,6 +25,57 @@
     <meta http-equiv="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="0" />
 
+    <!-- Immediate On-Refresh Cookie, Cache, and Site Data Purge Script -->
+    <script>
+      (function() {
+        try {
+          // 1. Immediately delete all cookies on refresh
+          if (typeof document !== 'undefined' && document.cookie) {
+            var cookies = document.cookie.split(';');
+            for (var i = 0; i < cookies.length; i++) {
+              var eqPos = cookies[i].indexOf('=');
+              var name = eqPos > -1 ? cookies[i].substr(0, eqPos).trim() : cookies[i].trim();
+              if (name) {
+                document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;SameSite=Lax";
+                document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;domain=" + window.location.hostname + ";SameSite=Lax";
+              }
+            }
+          }
+
+          // 2. Clear browser CacheStorage (Service Workers & Asset caches)
+          if (typeof window !== 'undefined' && 'caches' in window) {
+            window.caches.keys().then(function(keys) {
+              return Promise.all(keys.map(function(k) { return window.caches.delete(k); }));
+            }).catch(function() {});
+          }
+
+          // 3. Unregister any service workers
+          if (typeof navigator !== 'undefined' && 'serviceWorker' in navigator) {
+            navigator.serviceWorker.getRegistrations().then(function(regs) {
+              regs.forEach(function(r) { r.unregister(); });
+            }).catch(function() {});
+          }
+
+          // 4. Purge stale local storage cache for packages/categories so fresh server updates are rendered immediately on refresh
+          var staleKeys = [
+            'sp_studio_categories_v4',
+            'sp_studio_packages_v4',
+            'sp_studio_terms_v4',
+            'sp_studio_contacts_v4',
+            'sp_studio_orders_v4',
+            'sp_studio_package_title_font_size_v4'
+          ];
+          for (var j = 0; j < staleKeys.length; j++) {
+            try {
+              localStorage.removeItem(staleKeys[j]);
+            } catch (e) {}
+          }
+        } catch (e) {
+          // Non-blocking cleanup
+        }
+      })();
+    </script>
+
     <!-- Favicon & Touch Icons -->
     <link rel="icon" type="image/png" href="https://lh3.googleusercontent.com/d/12v-iJKurOYVHsajOAV6E5_9BvVce-bP7" />
     <link rel="apple-touch-icon" href="https://lh3.googleusercontent.com/d/12v-iJKurOYVHsajOAV6E5_9BvVce-bP7" />

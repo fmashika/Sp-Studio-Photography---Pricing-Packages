@@ -93,13 +93,22 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', time: new Date().toISOString() });
 });
 
-// Fetch current live system configuration
+// Fetch current live system configuration with zero caching
 app.get('/api/system', (req, res) => {
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+  res.setHeader('Surrogate-Control', 'no-store');
+
+  if (!systemState) {
+    loadInitialState();
+  }
+
   res.json({
     success: true,
     data: systemState,
-    version: systemState?.version || 1,
-    updatedAt: systemState?.updatedAt || null,
+    version: systemState?.version || Date.now(),
+    updatedAt: systemState?.updatedAt || new Date().toISOString(),
   });
 });
 

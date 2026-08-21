@@ -186,57 +186,22 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   });
 
-  // 4. Categories State
-  const [categories, setCategories] = useState<AppCategory[]>(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEYS.CATEGORIES);
-      return saved ? JSON.parse(saved) : defaultCategories;
-    } catch {
-      return defaultCategories;
-    }
-  });
+  // 4. Categories State (Initialized fresh with no stale localStorage pollution)
+  const [categories, setCategories] = useState<AppCategory[]>(() => defaultCategories);
 
   const [activeCategoryId, setActiveCategoryId] = useState<string>('wedding');
 
-  // 5. Terms State (Default 3 Sections)
-  const [terms, setTerms] = useState<TermSection[]>(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEYS.TERMS);
-      return saved ? JSON.parse(saved) : defaultTerms;
-    } catch {
-      return defaultTerms;
-    }
-  });
+  // 5. Terms State (Initialized fresh)
+  const [terms, setTerms] = useState<TermSection[]>(() => defaultTerms);
 
-  // 6. Packages State
-  const [packages, setPackages] = useState<PricingPackage[]>(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEYS.PACKAGES);
-      return saved ? JSON.parse(saved) : packagesData;
-    } catch {
-      return packagesData;
-    }
-  });
+  // 6. Packages State (Initialized fresh)
+  const [packages, setPackages] = useState<PricingPackage[]>(() => packagesData);
 
-  // 7. Contacts State
-  const [contacts, setContacts] = useState<ContactInfo>(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEYS.CONTACTS);
-      return saved ? JSON.parse(saved) : contactDetails;
-    } catch {
-      return contactDetails;
-    }
-  });
+  // 7. Contacts State (Initialized fresh)
+  const [contacts, setContacts] = useState<ContactInfo>(() => contactDetails);
 
-  // 8. Orders State
-  const [orders, setOrders] = useState<BookingOrder[]>(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEYS.ORDERS);
-      return saved ? JSON.parse(saved) : initialOrders;
-    } catch {
-      return [];
-    }
-  });
+  // 8. Orders State (Initialized fresh)
+  const [orders, setOrders] = useState<BookingOrder[]>(() => initialOrders);
 
   // 9. Admin Auth State
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState<boolean>(() => {
@@ -382,7 +347,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   }, [broadcastState]);
 
-  // Comprehensive cleaner: Clears Cookies, CacheStorage, and stale Site Data every 20 seconds
+  // Comprehensive cleaner: Clears Cookies, CacheStorage, and stale Site Data on reload and on schedule
   const clearCookiesAndSiteData = useCallback(async () => {
     try {
       // 1. Clear all browser cookies
@@ -406,16 +371,47 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
       // 3. Clear temporary sessionStorage
       if (typeof window !== 'undefined' && window.sessionStorage) {
+        // Keep admin auth status if user is currently logged in, wipe others
+        const adminAuth = window.sessionStorage.getItem(STORAGE_KEYS.ADMIN_AUTH);
         window.sessionStorage.clear();
+        if (adminAuth) {
+          window.sessionStorage.setItem(STORAGE_KEYS.ADMIN_AUTH, adminAuth);
+        }
       }
+
+      // 4. Remove stale business data keys from localStorage
+      const staleKeys = [
+        STORAGE_KEYS.CATEGORIES,
+        STORAGE_KEYS.PACKAGES,
+        STORAGE_KEYS.TERMS,
+        STORAGE_KEYS.CONTACTS,
+        STORAGE_KEYS.ORDERS,
+        STORAGE_KEYS.PACKAGE_TITLE_FONT_SIZE,
+      ];
+      staleKeys.forEach((k) => {
+        try {
+          localStorage.removeItem(k);
+        } catch {
+          // ignore
+        }
+      });
     } catch {
       // Non-blocking cleanup
     }
   }, []);
 
-  // Initial Fetch & 20-second Automatic Cookies/Site Data Cleaning + Live Admin Revalidation
+  // Initial Fetch & Automatic Cookies/Site Data Cleaning + Live Admin Revalidation
   useEffect(() => {
     let isMounted = true;
+
+    // Attach unload listener so cookies/cache are automatically cleaned on every refresh
+    const handleUnload = () => {
+      clearCookiesAndSiteData();
+    };
+    if (typeof window !== 'undefined') {
+      window.addEventListener('beforeunload', handleUnload);
+      window.addEventListener('pagehide', handleUnload);
+    }
 
     const fetchLiveSystem = async () => {
       try {
@@ -446,33 +442,27 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
           if (Array.isArray(remoteCats) && remoteCats.length > 0) {
             setCategories(remoteCats);
-            localStorage.setItem(STORAGE_KEYS.CATEGORIES, JSON.stringify(remoteCats));
           }
           if (Array.isArray(remotePkgs) && remotePkgs.length > 0) {
             setPackages(remotePkgs);
-            localStorage.setItem(STORAGE_KEYS.PACKAGES, JSON.stringify(remotePkgs));
           }
           if (Array.isArray(remoteTerms) && remoteTerms.length > 0) {
             setTerms(remoteTerms);
-            localStorage.setItem(STORAGE_KEYS.TERMS, JSON.stringify(remoteTerms));
           }
           if (remoteContacts && typeof remoteContacts === 'object') {
             setContacts(remoteContacts);
-            localStorage.setItem(STORAGE_KEYS.CONTACTS, JSON.stringify(remoteContacts));
           }
           if (Array.isArray(remoteOrders)) {
             setOrders(remoteOrders);
-            localStorage.setItem(STORAGE_KEYS.ORDERS, JSON.stringify(remoteOrders));
           }
           if (typeof remoteFontSize === 'number') {
             setPackageTitleFontSizePercentState(remoteFontSize);
-            localStorage.setItem(STORAGE_KEYS.PACKAGE_TITLE_FONT_SIZE, String(remoteFontSize));
           }
           setSyncStatus('synced');
           setLastSyncTime(new Date().toLocaleTimeString());
         }
       } catch {
-        // Fallback to local storage seamlessly
+        // Live server connection fallback
       }
     };
 
@@ -517,13 +507,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return () => {
       isMounted = false;
       clearInterval(intervalId);
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('beforeunload', handleUnload);
+        window.removeEventListener('pagehide', handleUnload);
+      }
       if (broadcastChannelRef.current) {
         broadcastChannelRef.current.close();
       }
     };
   }, [clearCookiesAndSiteData]);
 
-  // Sync to localStorage
+  // Sync user client preferences to localStorage
   useEffect(() => {
     localStorage.setItem(STORAGE_KEYS.THEME, theme);
   }, [theme]);
@@ -541,27 +535,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }, [savedCustomer]);
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.CATEGORIES, JSON.stringify(categories));
-  }, [categories]);
-
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.TERMS, JSON.stringify(terms));
-  }, [terms]);
-
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.PACKAGES, JSON.stringify(packages));
-  }, [packages]);
-
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.CONTACTS, JSON.stringify(contacts));
-  }, [contacts]);
-
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.ORDERS, JSON.stringify(orders));
-  }, [orders]);
-
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.PACKAGE_TITLE_FONT_SIZE, String(packageTitleFontSizePercent));
     if (typeof document !== 'undefined' && document.documentElement) {
       document.documentElement.style.fontSize = '';
     }
