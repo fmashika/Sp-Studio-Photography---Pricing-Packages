@@ -69,6 +69,9 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
     systemVersion,
     lastSyncTime,
     pushLiveUpdate,
+    firebaseUser,
+    logoutFirebaseAuth,
+    isFirebaseConnected,
   } = useApp();
 
   const [isPushingLive, setIsPushingLive] = useState(false);
@@ -293,6 +296,14 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
         </div>
 
         <div className="flex items-center gap-2 sm:gap-3">
+          {/* Firebase Cloud Database Status Indicator */}
+          <div className="hidden md:flex items-center gap-1.5 bg-[#141414] border border-white/10 px-2.5 py-1.5 rounded-xl text-xs" title="Firebase Firestore Cloud Database Connected">
+            <span className="w-2 h-2 rounded-full bg-amber-400" />
+            <span className="text-gray-300 text-[11px] font-semibold">
+              Firebase {isFirebaseConnected ? 'Cloud Active' : 'Ready'}
+            </span>
+          </div>
+
           {/* Live Sync Status Indicator */}
           <div className="hidden lg:flex items-center gap-2 bg-[#141414] border border-white/10 px-3 py-1.5 rounded-xl text-xs">
             <span

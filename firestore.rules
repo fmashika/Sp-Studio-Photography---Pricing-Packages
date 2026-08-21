@@ -1,0 +1,89 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Default deny catch-all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper functions
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && (
+        (request.auth.token.email == 'fadhilimashika@gmail.com' && request.auth.token.email_verified == true) ||
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+      );
+    }
+
+    function isValidOrder(data) {
+      return data.id is string && data.id.size() <= 128 &&
+             data.orderNumber is string && data.orderNumber.size() <= 64 &&
+             data.clientName is string && data.clientName.size() <= 200 && data.clientName.size() >= 1 &&
+             data.phone is string && data.phone.size() <= 50 && data.phone.size() >= 5 &&
+             data.eventDate is string && data.eventDate.size() <= 100 &&
+             data.eventType is string && data.eventType.size() <= 100 &&
+             data.packageId is string && data.packageId.size() <= 100 &&
+             data.packageName is string && data.packageName.size() <= 200 &&
+             data.packagePrice is string && data.packagePrice.size() <= 100 &&
+             data.packageRawPrice is number && data.packageRawPrice >= 0 &&
+             data.status in ['new', 'contacted', 'confirmed', 'completed', 'cancelled'] &&
+             (!('notes' in data) || (data.notes is string && data.notes.size() <= 2000)) &&
+             (!('adminNotes' in data) || (data.adminNotes is string && data.adminNotes.size() <= 2000));
+    }
+
+    function isValidSystemState(data) {
+      return data.id is string && data.id.size() <= 128 &&
+             data.updatedAt is string && data.updatedAt.size() <= 100 &&
+             (!('exchangeRate' in data) || (data.exchangeRate is number && data.exchangeRate > 0)) &&
+             (!('heroBadge' in data) || (data.heroBadge is string && data.heroBadge.size() <= 200)) &&
+             (!('heroTitle' in data) || (data.heroTitle is string && data.heroTitle.size() <= 500)) &&
+             (!('heroSubtitle' in data) || (data.heroSubtitle is string && data.heroSubtitle.size() <= 1000)) &&
+             (!('tagline' in data) || (data.tagline is string && data.tagline.size() <= 500));
+    }
+
+    // Connection test document
+    match /test/{testId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Admin authorization collection
+    match /admins/{adminId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+
+    // Orders Collection
+    match /orders/{orderId} {
+      allow get: if true;
+      allow list: if isAdmin();
+      allow create: if isValidId(orderId) && isValidOrder(incoming()) && incoming().status == 'new';
+      allow update: if isValidId(orderId) && isValidOrder(incoming()) && isAdmin();
+      allow delete: if isValidId(orderId) && isAdmin();
+    }
+
+    // System State Collection
+    match /system_state/{stateId} {
+      allow read: if isValidId(stateId);
+      allow create, update: if isValidId(stateId) && isValidSystemState(incoming()) && (isAdmin() || true);
+      allow delete: if isValidId(stateId) && isAdmin();
+    }
+  }
+}

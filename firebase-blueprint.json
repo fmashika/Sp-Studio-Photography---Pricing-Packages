@@ -1,0 +1,127 @@
+{
+  "entities": {
+    "bookingOrder": {
+      "title": "Booking Order",
+      "description": "Studio client booking order submitted via web form or WhatsApp booking flow",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier of the booking order"
+        },
+        "orderNumber": {
+          "type": "string",
+          "description": "Human-readable order tracking number (e.g. SP-849201)"
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "ISO timestamp of when the order was created"
+        },
+        "clientName": {
+          "type": "string",
+          "description": "Name of the client placing the booking"
+        },
+        "phone": {
+          "type": "string",
+          "description": "Phone or WhatsApp contact number"
+        },
+        "eventDate": {
+          "type": "string",
+          "description": "Date of the scheduled photo/video event"
+        },
+        "eventType": {
+          "type": "string",
+          "description": "Type of event (e.g. Wedding, Send-off, Live Stream)"
+        },
+        "packageId": {
+          "type": "string",
+          "description": "Identifier of the selected photography package or addition service"
+        },
+        "packageName": {
+          "type": "string",
+          "description": "Name of the package or service"
+        },
+        "packagePrice": {
+          "type": "string",
+          "description": "Display price formatted in TZS or USD"
+        },
+        "packageRawPrice": {
+          "type": "number",
+          "description": "Numeric price value"
+        },
+        "notes": {
+          "type": "string",
+          "description": "Optional notes or requirements from client"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["new", "contacted", "confirmed", "completed", "cancelled"],
+          "description": "Current order fulfillment state"
+        },
+        "adminNotes": {
+          "type": "string",
+          "description": "Internal administrative notes"
+        }
+      },
+      "required": ["id", "orderNumber", "createdAt", "clientName", "phone", "eventDate", "eventType", "packageId", "packageName", "packagePrice", "packageRawPrice", "status"]
+    },
+    "systemState": {
+      "title": "System State & Configuration",
+      "description": "Studio configuration including live rates, hero text, packages, and additions",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "System state document identifier"
+        },
+        "version": {
+          "type": "number",
+          "description": "Version number for optimistic synchronization"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "ISO timestamp of latest update"
+        },
+        "updatedBy": {
+          "type": "string",
+          "description": "Identifier or role of updater"
+        },
+        "exchangeRate": {
+          "type": "number",
+          "description": "USD to TZS currency conversion rate"
+        },
+        "heroBadge": {
+          "type": "string",
+          "description": "Header announcement badge"
+        },
+        "heroTitle": {
+          "type": "string",
+          "description": "Primary hero display headline"
+        },
+        "heroSubtitle": {
+          "type": "string",
+          "description": "Hero descriptive subtitle"
+        },
+        "tagline": {
+          "type": "string",
+          "description": "Studio brand tagline"
+        }
+      },
+      "required": ["id", "updatedAt"]
+    }
+  },
+  "firestore": {
+    "/orders/{orderId}": {
+      "schema": {
+        "$ref": "#/entities/bookingOrder"
+      },
+      "description": "Client photography and videography bookings"
+    },
+    "/system_state/{stateId}": {
+      "schema": {
+        "$ref": "#/entities/systemState"
+      },
+      "description": "Persistent studio system settings and state"
+    }
+  }
+}
