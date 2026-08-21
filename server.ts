@@ -15,14 +15,14 @@ app.use((req, res, next) => {
   next();
 });
 
-// Periodic cache cleanup every 10 seconds to maintain maximum speed
+// Periodic cache and system state synchronization every 20 seconds to maintain maximum speed and freshness
 setInterval(() => {
   try {
     loadInitialState();
   } catch (err) {
     // Non-blocking cleanup log
   }
-}, 10000);
+}, 20000);
 
 app.use(express.json({ limit: '10mb' }));
 

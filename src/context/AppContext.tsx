@@ -305,26 +305,45 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   }, [broadcastState]);
 
-  // Cache cleaner helper: Clears CacheStorage and stale cache artifacts
-  const clearBrowserCaches = useCallback(async () => {
+  // Comprehensive cleaner: Clears Cookies, CacheStorage, and stale Site Data every 20 seconds
+  const clearCookiesAndSiteData = useCallback(async () => {
     try {
+      // 1. Clear all browser cookies
+      if (typeof document !== 'undefined' && document.cookie) {
+        const cookies = document.cookie.split(';');
+        for (const cookie of cookies) {
+          const eqPos = cookie.indexOf('=');
+          const name = eqPos > -1 ? cookie.substr(0, eqPos).trim() : cookie.trim();
+          if (name) {
+            document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;SameSite=Lax`;
+            document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;domain=${window.location.hostname};SameSite=Lax`;
+          }
+        }
+      }
+
+      // 2. Clear browser CacheStorage (Service Workers & Assets)
       if (typeof window !== 'undefined' && 'caches' in window) {
         const cacheKeys = await window.caches.keys();
         await Promise.all(cacheKeys.map((key) => window.caches.delete(key)));
+      }
+
+      // 3. Clear temporary sessionStorage
+      if (typeof window !== 'undefined' && window.sessionStorage) {
+        window.sessionStorage.clear();
       }
     } catch {
       // Non-blocking cleanup
     }
   }, []);
 
-  // Initial Fetch & 10-second Auto Cache Clear + System Revalidation
+  // Initial Fetch & 20-second Automatic Cookies/Site Data Cleaning + Live Admin Revalidation
   useEffect(() => {
     let isMounted = true;
 
     const fetchLiveSystem = async () => {
       try {
-        // Clear caches to maximize loading speed and eliminate stale assets
-        await clearBrowserCaches();
+        // Automatically clean cookies, cache, and site data
+        await clearCookiesAndSiteData();
 
         const res = await fetch(`/api/system?_t=${Date.now()}`, {
           cache: 'no-store',
@@ -383,10 +402,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     // Immediate execution on mount
     fetchLiveSystem();
 
-    // Clear caches and sync every 10 seconds to increase speed and maintain real-time freshness
+    // Clean cookies and site data automatically every 20 seconds to guarantee all recent admin changes are shown
     const intervalId = setInterval(() => {
       fetchLiveSystem();
-    }, 10000);
+    }, 20000);
 
     // BroadcastChannel listener for instant cross-tab updates
     if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
@@ -425,7 +444,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         broadcastChannelRef.current.close();
       }
     };
-  }, [clearBrowserCaches]);
+  }, [clearCookiesAndSiteData]);
 
   // Sync to localStorage
   useEffect(() => {
