@@ -383,10 +383,19 @@ export const packagesData: PricingPackage[] = [
     "name": "Extra Photographer",
     "price": "TZS 350,000",
     "rawPrice": 350000,
-    "iconType": "camera",
+    "iconType": "none",
     "buttonLabel": "Book Now",
     "features": [
       "Professional additional photographer for comprehensive event coverage."
+    ],
+    "featured": false,
+    "sections": [
+      {
+        "subtitle": "What's Included:",
+        "items": [
+          "Professional additional photographer for comprehensive event coverage."
+        ]
+      }
     ]
   },
   {
@@ -395,10 +404,19 @@ export const packagesData: PricingPackage[] = [
     "name": "Extra Videographer",
     "price": "TZS 450,000",
     "rawPrice": 450000,
-    "iconType": "video",
+    "iconType": "none",
     "buttonLabel": "Book Now",
     "features": [
       "Professional additional cinematographer with dedicated 4K camera gear."
+    ],
+    "featured": false,
+    "sections": [
+      {
+        "subtitle": "What's Included:",
+        "items": [
+          "Professional additional cinematographer with dedicated 4K camera gear."
+        ]
+      }
     ]
   },
   {
@@ -407,10 +425,19 @@ export const packagesData: PricingPackage[] = [
     "name": "Extra tv (1) Screen",
     "price": "TZS 150,000",
     "rawPrice": 150000,
-    "iconType": "tv",
+    "iconType": "none",
     "buttonLabel": "Book Now",
     "features": [
       "One 65-inch high-definition LED screen with stand and live video feed."
+    ],
+    "featured": false,
+    "sections": [
+      {
+        "subtitle": "What's Included:",
+        "items": [
+          "One 65-inch high-definition LED screen with stand and live video feed."
+        ]
+      }
     ]
   },
   {
@@ -419,10 +446,19 @@ export const packagesData: PricingPackage[] = [
     "name": "Drone Coverage",
     "price": "TZS 350,000",
     "rawPrice": 350000,
-    "iconType": "camera",
+    "iconType": "none",
     "buttonLabel": "Book Now",
     "features": [
       "4K aerial cinematography & cinematic landscape drone highlights."
+    ],
+    "featured": false,
+    "sections": [
+      {
+        "subtitle": "What's Included:",
+        "items": [
+          "4K aerial cinematography & cinematic landscape drone highlights."
+        ]
+      }
     ]
   },
   {
@@ -431,11 +467,19 @@ export const packagesData: PricingPackage[] = [
     "name": "360 Video Booth",
     "price": "TZS 500,000",
     "rawPrice": 500000,
-    "iconType": "aperture",
+    "iconType": "none",
     "featured": true,
     "buttonLabel": "Book Now",
     "features": [
       "Interactive 360 rotating video platform with studio lighting & guest cloud gallery."
+    ],
+    "sections": [
+      {
+        "subtitle": "What's Included:",
+        "items": [
+          "Interactive 360 rotating video platform with studio lighting & guest cloud gallery."
+        ]
+      }
     ]
   },
   {
@@ -444,10 +488,19 @@ export const packagesData: PricingPackage[] = [
     "name": "Pre Wedding Photoshoot",
     "price": "TZS 350,000",
     "rawPrice": 350000,
-    "iconType": "heart",
+    "iconType": "none",
     "buttonLabel": "Book Now",
     "features": [
       "Romantic outdoor/location photoshoot session with edited high-res digital copies."
+    ],
+    "featured": false,
+    "sections": [
+      {
+        "subtitle": "What's Included:",
+        "items": [
+          "Romantic outdoor/location photoshoot session with edited high-res digital copies."
+        ]
+      }
     ]
   },
   {
@@ -456,10 +509,19 @@ export const packagesData: PricingPackage[] = [
     "name": "Engagement Photoshoot",
     "price": "TZS 350,000",
     "rawPrice": 350000,
-    "iconType": "gem",
+    "iconType": "none",
     "buttonLabel": "Book Now",
     "features": [
       "Dedicated engagement ceremony and couple portrait photo coverage."
+    ],
+    "featured": false,
+    "sections": [
+      {
+        "subtitle": "What's Included:",
+        "items": [
+          "Dedicated engagement ceremony and couple portrait photo coverage."
+        ]
+      }
     ]
   },
   {
@@ -468,10 +530,19 @@ export const packagesData: PricingPackage[] = [
     "name": "Kitchen Party Video & Photos",
     "price": "TZS 1,500,000",
     "rawPrice": 1500000,
-    "iconType": "sparkles",
+    "iconType": "none",
     "buttonLabel": "Book Now",
     "features": [
       "Complete photography and videography coverage for kitchen party celebrations."
+    ],
+    "featured": false,
+    "sections": [
+      {
+        "subtitle": "What's Included:",
+        "items": [
+          "Complete photography and videography coverage for kitchen party celebrations."
+        ]
+      }
     ]
   },
   {
@@ -480,10 +551,19 @@ export const packagesData: PricingPackage[] = [
     "name": "Maternity & Baby Studio Shoot (5 pictures)",
     "price": "TZS 150,000",
     "rawPrice": 150000,
-    "iconType": "star",
+    "iconType": "none",
     "buttonLabel": "Book Now",
     "features": [
       "5 professionally retouched studio photos with creative backdrops and props."
+    ],
+    "featured": false,
+    "sections": [
+      {
+        "subtitle": "What's Included:",
+        "items": [
+          "5 professionally retouched studio photos with creative backdrops and props."
+        ]
+      }
     ]
   },
   {
@@ -492,10 +572,19 @@ export const packagesData: PricingPackage[] = [
     "name": "Photoshoot (10 pictures)",
     "price": "TZS 250,000",
     "rawPrice": 250000,
-    "iconType": "camera",
+    "iconType": "none",
     "buttonLabel": "Book Now",
     "features": [
       "10 high-end retouched studio/outdoor portraits delivered in full resolution."
+    ],
+    "featured": false,
+    "sections": [
+      {
+        "subtitle": "What's Included:",
+        "items": [
+          "10 high-end retouched studio/outdoor portraits delivered in full resolution."
+        ]
+      }
     ]
   },
   {
@@ -504,10 +593,19 @@ export const packagesData: PricingPackage[] = [
     "name": "Studio shoot (5 pictures)",
     "price": "TZS 100,000",
     "rawPrice": 100000,
-    "iconType": "camera",
+    "iconType": "none",
     "buttonLabel": "Book Now",
     "features": [
       "5 studio portrait pictures with professional color grading."
+    ],
+    "featured": false,
+    "sections": [
+      {
+        "subtitle": "What's Included:",
+        "items": [
+          "5 studio portrait pictures with professional color grading."
+        ]
+      }
     ]
   },
   {
@@ -516,10 +614,19 @@ export const packagesData: PricingPackage[] = [
     "name": "A3 Photobook",
     "price": "TZS 350,000",
     "rawPrice": 350000,
-    "iconType": "award",
+    "iconType": "none",
     "buttonLabel": "Book Now",
     "features": [
       "Hardcover luxury designed A3 photo album with premium luster print pages."
+    ],
+    "featured": false,
+    "sections": [
+      {
+        "subtitle": "What's Included:",
+        "items": [
+          "Hardcover luxury designed A3 photo album with premium luster print pages."
+        ]
+      }
     ]
   },
   {
@@ -528,10 +635,19 @@ export const packagesData: PricingPackage[] = [
     "name": "A4 Wooden Frame",
     "price": "TZS 50,000",
     "rawPrice": 50000,
-    "iconType": "award",
+    "iconType": "none",
     "buttonLabel": "Book Now",
     "features": [
       "Custom crafted solid wooden frame in A4 size with UV glass protective finish."
+    ],
+    "featured": false,
+    "sections": [
+      {
+        "subtitle": "What's Included:",
+        "items": [
+          "Custom crafted solid wooden frame in A4 size with UV glass protective finish."
+        ]
+      }
     ]
   },
   {
@@ -540,10 +656,19 @@ export const packagesData: PricingPackage[] = [
     "name": "A3 Wooden Frame",
     "price": "TZS 80,000",
     "rawPrice": 80000,
-    "iconType": "award",
+    "iconType": "none",
     "buttonLabel": "Book Now",
     "features": [
       "Custom crafted solid wooden frame in A3 size with high-clarity glass."
+    ],
+    "featured": false,
+    "sections": [
+      {
+        "subtitle": "What's Included:",
+        "items": [
+          "Custom crafted solid wooden frame in A3 size with high-clarity glass."
+        ]
+      }
     ]
   },
   {
@@ -552,10 +677,19 @@ export const packagesData: PricingPackage[] = [
     "name": "A2 Wooden Frame",
     "price": "TZS 120,000",
     "rawPrice": 120000,
-    "iconType": "award",
+    "iconType": "none",
     "buttonLabel": "Book Now",
     "features": [
       "Large format solid wooden frame in A2 size ready for wall mounting."
+    ],
+    "featured": false,
+    "sections": [
+      {
+        "subtitle": "What's Included:",
+        "items": [
+          "Large format solid wooden frame in A2 size ready for wall mounting."
+        ]
+      }
     ]
   },
   {
@@ -564,10 +698,19 @@ export const packagesData: PricingPackage[] = [
     "name": "A1 Wooden Frame",
     "price": "TZS 160,000",
     "rawPrice": 160000,
-    "iconType": "award",
+    "iconType": "none",
     "buttonLabel": "Book Now",
     "features": [
       "Grand exhibition size A1 solid wooden frame with premium metallic brackets."
+    ],
+    "featured": false,
+    "sections": [
+      {
+        "subtitle": "What's Included:",
+        "items": [
+          "Grand exhibition size A1 solid wooden frame with premium metallic brackets."
+        ]
+      }
     ]
   },
   {
@@ -576,10 +719,19 @@ export const packagesData: PricingPackage[] = [
     "name": "A3 Acrylic Frame",
     "price": "TZS 150,000",
     "rawPrice": 150000,
-    "iconType": "gem",
+    "iconType": "none",
     "buttonLabel": "Book Now",
     "features": [
       "Ultra-glossy crystal clear A3 acrylic glass frame with floating wall spacers."
+    ],
+    "featured": false,
+    "sections": [
+      {
+        "subtitle": "What's Included:",
+        "items": [
+          "Ultra-glossy crystal clear A3 acrylic glass frame with floating wall spacers."
+        ]
+      }
     ]
   },
   {
@@ -588,10 +740,19 @@ export const packagesData: PricingPackage[] = [
     "name": "A2 Acrylic Frame",
     "price": "TZS 250,000",
     "rawPrice": 250000,
-    "iconType": "gem",
+    "iconType": "none",
     "buttonLabel": "Book Now",
     "features": [
       "Luxury high-definition A2 acrylic glass frame with diamond-polished edges."
+    ],
+    "featured": false,
+    "sections": [
+      {
+        "subtitle": "What's Included:",
+        "items": [
+          "Luxury high-definition A2 acrylic glass frame with diamond-polished edges."
+        ]
+      }
     ]
   },
   {
@@ -600,10 +761,40 @@ export const packagesData: PricingPackage[] = [
     "name": "A1 Acrylic Frame",
     "price": "TZS 300,000",
     "rawPrice": 300000,
-    "iconType": "crown",
+    "iconType": "none",
     "buttonLabel": "Book Now",
     "features": [
       "Premium executive A1 acrylic frameless glass portrait with luminous depth."
+    ],
+    "featured": false,
+    "sections": [
+      {
+        "subtitle": "What's Included:",
+        "items": [
+          "Premium executive A1 acrylic frameless glass portrait with luminous depth."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "addition-youtube-livestream",
+    "categoryId": "addition",
+    "name": "YouTube Live Stream",
+    "price": "TZS 1,300,000",
+    "rawPrice": 1300000,
+    "iconType": "none",
+    "featured": false,
+    "buttonLabel": "Book Now",
+    "features": [
+      "Full high-definition multi-camera live streaming setup with audio mixing directly to YouTube."
+    ],
+    "sections": [
+      {
+        "subtitle": "What's Included:",
+        "items": [
+          "Full high-definition multi-camera live streaming setup with audio mixing directly to YouTube."
+        ]
+      }
     ]
   }
 ];
