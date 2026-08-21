@@ -116,7 +116,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [syncStatus, setSyncStatus] = useState<LiveSyncStatus>('synced');
   const [lastSyncTime, setLastSyncTime] = useState<string | null>(() => new Date().toLocaleTimeString());
   const broadcastChannelRef = useRef<BroadcastChannel | null>(null);
+  const clientIdRef = useRef<string>(Math.random().toString(36).substring(2, 9));
   const isInitialMount = useRef(true);
+  const isRemoteUpdateRef = useRef(false);
 
   // 1. Theme State (Dark by default, toggles to Light)
   const [theme, setTheme] = useState<ThemeMode>(() => {
@@ -228,6 +230,27 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   });
 
+  // Ref to always access latest state synchronously without re-triggering effects
+  const latestStateRef = useRef({
+    categories,
+    packages,
+    terms,
+    contacts,
+    orders,
+    packageTitleFontSizePercent,
+  });
+
+  useEffect(() => {
+    latestStateRef.current = {
+      categories,
+      packages,
+      terms,
+      contacts,
+      orders,
+      packageTitleFontSizePercent,
+    };
+  }, [categories, packages, terms, contacts, orders, packageTitleFontSizePercent]);
+
   // Broadcast sync helper
   const broadcastState = useCallback((statePayload: any) => {
     try {
@@ -237,6 +260,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         }
         broadcastChannelRef.current.postMessage({
           type: 'LIVE_UPDATE',
+          senderId: clientIdRef.current,
           payload: statePayload,
           timestamp: Date.now(),
         });
@@ -246,17 +270,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   }, []);
 
-  // Direct Live Server Publish function
+  // Direct Live Server Publish function (stable reference, no re-triggering loops)
   const pushLiveUpdate = useCallback(async (): Promise<boolean> => {
     try {
-      setSyncStatus('syncing');
+      const currentState = latestStateRef.current;
       const payload = {
-        categories,
-        packages,
-        terms,
-        contacts,
-        orders,
-        packageTitleFontSizePercent,
+        categories: currentState.categories,
+        packages: currentState.packages,
+        terms: currentState.terms,
+        contacts: currentState.contacts,
+        orders: currentState.orders,
+        packageTitleFontSizePercent: currentState.packageTitleFontSizePercent,
         version: CURRENT_APP_VERSION,
       };
 
@@ -279,7 +303,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setSyncStatus('offline');
       return false;
     }
-  }, [categories, packages, terms, contacts, orders, packageTitleFontSizePercent, broadcastState]);
+  }, [broadcastState]);
 
   // Initial Fetch from Server (Live Cloud System)
   useEffect(() => {
@@ -299,6 +323,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             orders: remoteOrders,
             packageTitleFontSizePercent: remoteFontSize,
           } = json.data;
+
+          isRemoteUpdateRef.current = true;
 
           if (Array.isArray(remoteCats) && remoteCats.length > 0) {
             setCategories(remoteCats);
@@ -339,8 +365,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       try {
         broadcastChannelRef.current = new BroadcastChannel('sp_studio_live_sync_v4');
         broadcastChannelRef.current.onmessage = (event) => {
-          if (event.data && event.data.type === 'LIVE_UPDATE' && event.data.payload) {
+          if (
+            event.data &&
+            event.data.type === 'LIVE_UPDATE' &&
+            event.data.payload &&
+            event.data.senderId !== clientIdRef.current
+          ) {
             const p = event.data.payload;
+            isRemoteUpdateRef.current = true;
             if (Array.isArray(p.categories)) setCategories(p.categories);
             if (Array.isArray(p.packages)) setPackages(p.packages);
             if (Array.isArray(p.terms)) setTerms(p.terms);
@@ -385,52 +417,48 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEYS.CATEGORIES, JSON.stringify(categories));
-    if (!isInitialMount.current) {
-      pushLiveUpdate();
-    }
-  }, [categories, pushLiveUpdate]);
+  }, [categories]);
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEYS.TERMS, JSON.stringify(terms));
-    if (!isInitialMount.current) {
-      pushLiveUpdate();
-    }
-  }, [terms, pushLiveUpdate]);
+  }, [terms]);
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEYS.PACKAGES, JSON.stringify(packages));
-    if (!isInitialMount.current) {
-      pushLiveUpdate();
-    }
-  }, [packages, pushLiveUpdate]);
+  }, [packages]);
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEYS.CONTACTS, JSON.stringify(contacts));
-    if (!isInitialMount.current) {
-      pushLiveUpdate();
-    }
-  }, [contacts, pushLiveUpdate]);
+  }, [contacts]);
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEYS.ORDERS, JSON.stringify(orders));
-    if (!isInitialMount.current) {
-      pushLiveUpdate();
-    }
-  }, [orders, pushLiveUpdate]);
+  }, [orders]);
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEYS.PACKAGE_TITLE_FONT_SIZE, String(packageTitleFontSizePercent));
     if (typeof document !== 'undefined' && document.documentElement) {
       document.documentElement.style.fontSize = '';
     }
-    if (!isInitialMount.current) {
-      pushLiveUpdate();
-    }
-  }, [packageTitleFontSizePercent, pushLiveUpdate]);
+  }, [packageTitleFontSizePercent]);
 
+  // Single debounced auto-sync to live server when user modifies data in admin
   useEffect(() => {
-    isInitialMount.current = false;
-  }, []);
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      return;
+    }
+    if (isRemoteUpdateRef.current) {
+      isRemoteUpdateRef.current = false;
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      pushLiveUpdate();
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [categories, packages, terms, contacts, orders, packageTitleFontSizePercent, pushLiveUpdate]);
 
   // Toggle Theme
   const toggleTheme = () => {
