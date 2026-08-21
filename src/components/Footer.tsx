@@ -154,7 +154,7 @@ export const Footer: React.FC<FooterProps> = ({ onOpenLocation, onSecretAdminTri
               </div>
               <div>
                 <p className="text-[10px] font-bold text-[#ca8a04] dark:text-[#eab308] tracking-widest uppercase mb-0.5">
-                  STUDIO LOCATION
+                  OFFICE LOCATION
                 </p>
                 <p
                   className={`text-xs sm:text-[13px] font-medium transition-colors truncate ${
