@@ -348,7 +348,9 @@
       "rawPrice": 350000,
       "iconType": "camera",
       "buttonLabel": "Book Now",
-      "features": ["Professional additional photographer for comprehensive event coverage."]
+      "features": [
+        "Professional additional photographer for comprehensive event coverage."
+      ]
     },
     {
       "id": "addition-extra-video",
@@ -358,7 +360,9 @@
       "rawPrice": 450000,
       "iconType": "video",
       "buttonLabel": "Book Now",
-      "features": ["Professional additional cinematographer with dedicated 4K camera gear."]
+      "features": [
+        "Professional additional cinematographer with dedicated 4K camera gear."
+      ]
     },
     {
       "id": "addition-extra-tv",
@@ -368,7 +372,9 @@
       "rawPrice": 150000,
       "iconType": "tv",
       "buttonLabel": "Book Now",
-      "features": ["One 65-inch high-definition LED screen with stand and live video feed."]
+      "features": [
+        "One 65-inch high-definition LED screen with stand and live video feed."
+      ]
     },
     {
       "id": "addition-drone",
@@ -378,7 +384,9 @@
       "rawPrice": 350000,
       "iconType": "camera",
       "buttonLabel": "Book Now",
-      "features": ["4K aerial cinematography & cinematic landscape drone highlights."]
+      "features": [
+        "4K aerial cinematography & cinematic landscape drone highlights."
+      ]
     },
     {
       "id": "addition-360booth",
@@ -388,9 +396,10 @@
       "rawPrice": 500000,
       "iconType": "aperture",
       "featured": true,
-      "badge": "POPULAR",
       "buttonLabel": "Book Now",
-      "features": ["Interactive 360 rotating video platform with studio lighting & guest cloud gallery."]
+      "features": [
+        "Interactive 360 rotating video platform with studio lighting & guest cloud gallery."
+      ]
     },
     {
       "id": "addition-prewedding",
@@ -400,7 +409,9 @@
       "rawPrice": 350000,
       "iconType": "heart",
       "buttonLabel": "Book Now",
-      "features": ["Romantic outdoor/location photoshoot session with edited high-res digital copies."]
+      "features": [
+        "Romantic outdoor/location photoshoot session with edited high-res digital copies."
+      ]
     },
     {
       "id": "addition-engagement",
@@ -410,7 +421,9 @@
       "rawPrice": 350000,
       "iconType": "gem",
       "buttonLabel": "Book Now",
-      "features": ["Dedicated engagement ceremony and couple portrait photo coverage."]
+      "features": [
+        "Dedicated engagement ceremony and couple portrait photo coverage."
+      ]
     },
     {
       "id": "addition-kitchenparty",
@@ -420,7 +433,9 @@
       "rawPrice": 1500000,
       "iconType": "sparkles",
       "buttonLabel": "Book Now",
-      "features": ["Complete photography and videography coverage for kitchen party celebrations."]
+      "features": [
+        "Complete photography and videography coverage for kitchen party celebrations."
+      ]
     },
     {
       "id": "addition-maternity",
@@ -430,7 +445,9 @@
       "rawPrice": 150000,
       "iconType": "star",
       "buttonLabel": "Book Now",
-      "features": ["5 professionally retouched studio photos with creative backdrops and props."]
+      "features": [
+        "5 professionally retouched studio photos with creative backdrops and props."
+      ]
     },
     {
       "id": "addition-photoshoot-10",
@@ -440,7 +457,9 @@
       "rawPrice": 250000,
       "iconType": "camera",
       "buttonLabel": "Book Now",
-      "features": ["10 high-end retouched studio/outdoor portraits delivered in full resolution."]
+      "features": [
+        "10 high-end retouched studio/outdoor portraits delivered in full resolution."
+      ]
     },
     {
       "id": "addition-studio-5",
@@ -450,7 +469,9 @@
       "rawPrice": 100000,
       "iconType": "camera",
       "buttonLabel": "Book Now",
-      "features": ["5 studio portrait pictures with professional color grading."]
+      "features": [
+        "5 studio portrait pictures with professional color grading."
+      ]
     },
     {
       "id": "addition-a3-photobook",
@@ -460,7 +481,9 @@
       "rawPrice": 350000,
       "iconType": "award",
       "buttonLabel": "Book Now",
-      "features": ["Hardcover luxury designed A3 photo album with premium luster print pages."]
+      "features": [
+        "Hardcover luxury designed A3 photo album with premium luster print pages."
+      ]
     },
     {
       "id": "addition-a4-wood",
@@ -470,7 +493,9 @@
       "rawPrice": 50000,
       "iconType": "award",
       "buttonLabel": "Book Now",
-      "features": ["Custom crafted solid wooden frame in A4 size with UV glass protective finish."]
+      "features": [
+        "Custom crafted solid wooden frame in A4 size with UV glass protective finish."
+      ]
     },
     {
       "id": "addition-a3-wood",
@@ -480,7 +505,9 @@
       "rawPrice": 80000,
       "iconType": "award",
       "buttonLabel": "Book Now",
-      "features": ["Custom crafted solid wooden frame in A3 size with high-clarity glass."]
+      "features": [
+        "Custom crafted solid wooden frame in A3 size with high-clarity glass."
+      ]
     },
     {
       "id": "addition-a2-wood",
@@ -490,7 +517,9 @@
       "rawPrice": 120000,
       "iconType": "award",
       "buttonLabel": "Book Now",
-      "features": ["Large format solid wooden frame in A2 size ready for wall mounting."]
+      "features": [
+        "Large format solid wooden frame in A2 size ready for wall mounting."
+      ]
     },
     {
       "id": "addition-a1-wood",
@@ -500,7 +529,9 @@
       "rawPrice": 160000,
       "iconType": "award",
       "buttonLabel": "Book Now",
-      "features": ["Grand exhibition size A1 solid wooden frame with premium metallic brackets."]
+      "features": [
+        "Grand exhibition size A1 solid wooden frame with premium metallic brackets."
+      ]
     },
     {
       "id": "addition-a3-acrylic",
@@ -510,7 +541,9 @@
       "rawPrice": 150000,
       "iconType": "gem",
       "buttonLabel": "Book Now",
-      "features": ["Ultra-glossy crystal clear A3 acrylic glass frame with floating wall spacers."]
+      "features": [
+        "Ultra-glossy crystal clear A3 acrylic glass frame with floating wall spacers."
+      ]
     },
     {
       "id": "addition-a2-acrylic",
@@ -520,7 +553,9 @@
       "rawPrice": 250000,
       "iconType": "gem",
       "buttonLabel": "Book Now",
-      "features": ["Luxury high-definition A2 acrylic glass frame with diamond-polished edges."]
+      "features": [
+        "Luxury high-definition A2 acrylic glass frame with diamond-polished edges."
+      ]
     },
     {
       "id": "addition-a1-acrylic",
@@ -530,7 +565,9 @@
       "rawPrice": 300000,
       "iconType": "crown",
       "buttonLabel": "Book Now",
-      "features": ["Premium executive A1 acrylic frameless glass portrait with luminous depth."]
+      "features": [
+        "Premium executive A1 acrylic frameless glass portrait with luminous depth."
+      ]
     }
   ],
   "terms": [
@@ -568,6 +605,6 @@
   },
   "orders": [],
   "packageTitleFontSizePercent": 90,
-  "version": 1787300000000,
-  "updatedAt": "2026-08-21T07:30:00.000Z"
+  "version": 1787298612890,
+  "updatedAt": "2026-08-21T07:50:12.890Z"
 }

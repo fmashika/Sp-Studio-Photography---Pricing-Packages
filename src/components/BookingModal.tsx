@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, MessageSquareText, Phone, Mail, Calendar, Sparkles, User, Check, BookmarkCheck } from 'lucide-react';
+import { X, Phone, Mail, Calendar, User, Check, BookmarkCheck } from 'lucide-react';
 import { PricingPackage } from '../types';
 import { useApp } from '../context/AppContext';
 import { SpLogo } from './SpLogo';
@@ -65,12 +65,13 @@ export const BookingModal: React.FC<BookingModalProps> = ({ pkg, isOpen, onClose
 
     setIsSuccess(true);
 
-    // 3. Format WhatsApp text and launch
-    const text = `Hello Sp Studio,\n\nI would like to book/inquire about the *${pkg.name} Package* (${displayedPrice}).\n\n*Client Name:* ${clientName || 'Not specified'}\n*Phone:* ${phone || 'Not specified'}\n*Event Type:* ${eventType}\n*Event Date:* ${eventDate || 'To be decided'}\n${notes ? `*Special Request:* ${notes}\n` : ''}\nThank you!`;
+    // 3. Format WhatsApp text with required custom message and launch
+    const text = `Already Booking a ${pkg.name} (${displayedPrice}) please check or confirm.\n\n*Client Name:* ${clientName.trim() || 'Client'}\n*Phone:* ${phone.trim() || 'Not specified'}\n*Event Date:* ${eventDate || 'To be decided'}\n*Event Type:* ${eventType}${notes.trim() ? `\n*Notes:* ${notes.trim()}` : ''}`;
     const encoded = encodeURIComponent(text);
+    const cleanWaNumber = (contacts.whatsappNumber || '255743705912').replace(/[^0-9]/g, '');
     
     setTimeout(() => {
-      window.open(`https://wa.me/${contacts.whatsappNumber}?text=${encoded}`, '_blank');
+      window.open(`https://wa.me/${cleanWaNumber}?text=${encoded}`, '_blank');
     }, 400);
   };
 
@@ -111,9 +112,9 @@ export const BookingModal: React.FC<BookingModalProps> = ({ pkg, isOpen, onClose
       notes: notes.trim(),
     });
 
-    const subject = encodeURIComponent(`Booking Inquiry: ${pkg.name} Package - Sp Studio`);
+    const subject = encodeURIComponent(`Already Booking a ${pkg.name} (${displayedPrice}) - Sp Studio`);
     const body = encodeURIComponent(
-      `Hello Sp Studio,\n\nI am interested in booking the ${pkg.name} package (${displayedPrice}).\n\nName: ${clientName}\nPhone: ${phone}\nEvent Type: ${eventType}\nDate: ${eventDate}\nNotes: ${notes}\n\nLooking forward to hearing from you.`
+      `Already Booking a ${pkg.name} (${displayedPrice}) please check or confirm.\n\nName: ${clientName}\nPhone: ${phone}\nEvent Type: ${eventType}\nDate: ${eventDate}\nNotes: ${notes}`
     );
     window.location.href = `mailto:${contacts.email}?subject=${subject}&body=${body}`;
   };
@@ -170,7 +171,7 @@ export const BookingModal: React.FC<BookingModalProps> = ({ pkg, isOpen, onClose
           </div>
         </div>
 
-        {/* Inclusions Quick Preview with Simple Bullets */}
+        {/* Deliverables Quick Preview with Simple Bullets */}
         <div
           className={`rounded-2xl p-4 mb-6 ${
             isDark
@@ -178,13 +179,6 @@ export const BookingModal: React.FC<BookingModalProps> = ({ pkg, isOpen, onClose
               : 'bg-gray-50 border border-gray-200'
           }`}
         >
-          <p
-            className={`text-xs font-semibold uppercase tracking-wider mb-2.5 flex items-center gap-1.5 ${
-              isDark ? 'text-white' : 'text-gray-900 font-bold'
-            }`}
-          >
-            <Sparkles className="w-3.5 h-3.5 text-[#ca8a04] dark:text-[#eab308]" /> Package Inclusions
-          </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
             {pkg.features.slice(0, 6).map((feat, i) => (
               <div
@@ -330,7 +324,7 @@ export const BookingModal: React.FC<BookingModalProps> = ({ pkg, isOpen, onClose
           {isSuccess && (
             <div className="p-3 bg-emerald-500/20 border border-emerald-500/40 rounded-xl text-emerald-600 dark:text-emerald-300 text-xs flex items-center gap-2 font-bold">
               <Check className="w-4 h-4 text-emerald-500 shrink-0" />
-              <span>Details remembered and saved! Launching WhatsApp...</span>
+              <span>Order saved to admin! Opening WhatsApp to confirm with owner...</span>
             </div>
           )}
 
@@ -338,14 +332,13 @@ export const BookingModal: React.FC<BookingModalProps> = ({ pkg, isOpen, onClose
           <div className="space-y-3 pt-2">
             <button
               type="submit"
-              className={`w-full flex items-center justify-center gap-2 font-black text-sm py-4 px-4 rounded-2xl shadow-xl transition-all duration-200 active:scale-[0.98] cursor-pointer ${
+              className={`w-full flex items-center justify-center font-black text-sm py-4 px-4 rounded-2xl shadow-xl transition-all duration-200 active:scale-[0.98] cursor-pointer tracking-wider uppercase ${
                 isDark
-                  ? 'bg-[#eab308] hover:bg-white text-white hover:text-black shadow-[#eab308]/25 drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]'
+                  ? 'bg-[#eab308] hover:bg-white text-black hover:text-black shadow-[#eab308]/25 drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]'
                   : 'bg-black hover:bg-[#eab308] text-white hover:text-black shadow-black/20'
               }`}
             >
-              <MessageSquareText className="w-4 h-4 fill-current" />
-              <span>Instant Booking on WhatsApp</span>
+              <span>BOOK NOW</span>
             </button>
 
             <div className="grid grid-cols-2 gap-3">
