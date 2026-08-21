@@ -13,9 +13,10 @@ export const Footer: React.FC<FooterProps> = ({ onOpenLocation, onSecretAdminTri
   const isDark = theme === 'dark';
   const lastTapRef = useRef<number>(0);
 
+  // Fast 2x click/tap trigger for admin login portal
   const handleDoubleTap = () => {
     const now = Date.now();
-    const DOUBLE_TAP_DELAY = 400; // ms
+    const DOUBLE_TAP_DELAY = 450; // ms
     if (now - lastTapRef.current < DOUBLE_TAP_DELAY) {
       if (onSecretAdminTrigger) {
         onSecretAdminTrigger();
@@ -39,12 +40,12 @@ export const Footer: React.FC<FooterProps> = ({ onOpenLocation, onSecretAdminTri
         {/* Brand & Contacts Grid */}
         <div className="space-y-6 pb-10">
           
-          {/* Brand Header with Secret 2X Tap */}
+          {/* Brand Header with Secret 2X Tap on 'SP STUDIO' */}
           <div
             onClick={handleDoubleTap}
             onDoubleClick={onSecretAdminTrigger}
-            className="flex items-center gap-3 cursor-pointer select-none w-fit"
-            title="Sp Studio"
+            className="flex items-center gap-3 cursor-pointer select-none w-fit group active:opacity-75 transition-opacity"
+            title="SP STUDIO (Click 2x fast for Admin Login)"
           >
             <SpLogo size="sm" showStudioText={false} className="shrink-0" />
             <h2
@@ -169,13 +170,20 @@ export const Footer: React.FC<FooterProps> = ({ onOpenLocation, onSecretAdminTri
           </div>
         </div>
 
-        {/* Bottom Copyright */}
+        {/* Bottom Copyright with Secret 2X Tap on '2026 SP STUDIO' */}
         <div
           className={`border-t pt-6 flex flex-col sm:flex-row items-center justify-between text-[11px] gap-3 text-center sm:text-left ${
             isDark ? 'border-white/10 text-gray-400' : 'border-gray-200 text-gray-500'
           }`}
         >
-          <p>© {new Date().getFullYear()} SP STUDIO</p>
+          <p
+            onClick={handleDoubleTap}
+            onDoubleClick={onSecretAdminTrigger}
+            className="cursor-pointer select-none font-semibold hover:text-[#eab308] transition-colors py-1 px-2 rounded-lg -ml-2 active:scale-95"
+            title="2026 SP STUDIO (Click 2x fast for Admin Login)"
+          >
+            © 2026 SP STUDIO
+          </p>
           <p className="tracking-widest uppercase text-[10px] text-[#ca8a04] dark:text-[#eab308] font-bold">
             ALL RIGHTS RESERVED
           </p>

@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React from 'react';
 import { SpLogo } from './SpLogo';
 import { useApp } from '../context/AppContext';
 
@@ -6,34 +6,30 @@ interface HeaderProps {
   onSecretAdminTrigger?: () => void;
 }
 
-export const Header: React.FC<HeaderProps> = ({ onSecretAdminTrigger }) => {
+export const Header: React.FC<HeaderProps> = () => {
   const { theme } = useApp();
-  const lastTapRef = useRef<number>(0);
 
-  // Fast double-tap handler for mobile touch + desktop clicks
-  const handleDoubleTap = () => {
-    const now = Date.now();
-    const DOUBLE_TAP_DELAY = 400; // ms
-    if (now - lastTapRef.current < DOUBLE_TAP_DELAY) {
-      if (onSecretAdminTrigger) {
-        onSecretAdminTrigger();
-      }
-      lastTapRef.current = 0;
-    } else {
-      lastTapRef.current = now;
-    }
+  // Instant reload and refresh when user touches or clicks header logo or SP STUDIO text
+  const handleReload = () => {
+    window.location.reload();
   };
 
   const isDark = theme === 'dark';
 
   return (
     <header className="relative pt-6 pb-4 md:pt-10 md:pb-6 text-center px-4 flex flex-col items-center select-none">
-      {/* Brand Logo at the beginning */}
+      {/* Brand Logo - Touching/clicking reloads and refreshes the website */}
       <div
-        onClick={handleDoubleTap}
-        onDoubleClick={onSecretAdminTrigger}
+        onClick={handleReload}
         className="relative mb-2 group cursor-pointer active:scale-95 transition-transform"
-        title="Sp Studio"
+        title="Sp Studio - Click to refresh"
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            handleReload();
+          }
+        }}
       >
         <div
           className={`absolute inset-0 rounded-full blur-lg transition-all duration-300 ${
@@ -47,15 +43,21 @@ export const Header: React.FC<HeaderProps> = ({ onSecretAdminTrigger }) => {
         </div>
       </div>
 
-      {/* Brand Title: SP STUDIO starts here */}
+      {/* Brand Title: SP STUDIO - Touching/clicking reloads and refreshes the website */}
       <h1
-        onClick={handleDoubleTap}
-        onDoubleClick={onSecretAdminTrigger}
+        onClick={handleReload}
         style={{ fontFamily: 'Arial, Helvetica, sans-serif' }}
         className={`text-3xl sm:text-4xl md:text-5xl lg:text-[44px] font-black tracking-[0.12em] uppercase drop-shadow-sm cursor-pointer active:opacity-80 transition-opacity select-none ${
           isDark ? 'text-white' : 'text-gray-950'
         }`}
-        title="Sp Studio"
+        title="Sp Studio - Click to refresh"
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            handleReload();
+          }
+        }}
       >
         SP STUDIO
       </h1>

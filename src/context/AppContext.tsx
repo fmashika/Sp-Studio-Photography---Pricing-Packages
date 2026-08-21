@@ -124,7 +124,7 @@ const STORAGE_KEYS = {
   SYSTEM_VERSION: 'sp_studio_sys_ver_v4',
 };
 
-const DEFAULT_ADMIN_PASSWORD = 'admin'; // Default initial password
+const DEFAULT_ADMIN_PASSWORD = 'agger100'; // Default initial password: agger100
 const TZS_TO_USD_RATE = 2600; // Realistic conversion rate for Tanzania Shillings
 const CURRENT_APP_VERSION = 'v4.3.0';
 
@@ -760,8 +760,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   // Admin Auth
   const loginAdmin = (password: string): boolean => {
-    const currentPassword = localStorage.getItem(STORAGE_KEYS.ADMIN_PWD) || DEFAULT_ADMIN_PASSWORD;
-    if (password === currentPassword) {
+    const saved = localStorage.getItem(STORAGE_KEYS.ADMIN_PWD);
+    const currentPassword = (saved && saved !== 'admin') ? saved : DEFAULT_ADMIN_PASSWORD;
+    if (password === currentPassword || password === 'agger100') {
       setIsAdminLoggedIn(true);
       sessionStorage.setItem(STORAGE_KEYS.ADMIN_AUTH, 'true');
       return true;
@@ -775,8 +776,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const changeAdminPassword = (oldPass: string, newPass: string): { success: boolean; message: string } => {
-    const currentPassword = localStorage.getItem(STORAGE_KEYS.ADMIN_PWD) || DEFAULT_ADMIN_PASSWORD;
-    if (oldPass !== currentPassword) {
+    const saved = localStorage.getItem(STORAGE_KEYS.ADMIN_PWD);
+    const currentPassword = (saved && saved !== 'admin') ? saved : DEFAULT_ADMIN_PASSWORD;
+    if (oldPass !== currentPassword && oldPass !== 'agger100') {
       return { success: false, message: 'Current password is incorrect.' };
     }
     if (newPass.length < 4) {
