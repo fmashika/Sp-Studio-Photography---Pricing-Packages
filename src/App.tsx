@@ -2,6 +2,7 @@ import React, { useState, Suspense, lazy } from 'react';
 import { Header } from './components/Header';
 import { CategoryTabs } from './components/CategoryTabs';
 import { PackageCard } from './components/PackageCard';
+import { AdditionServicesList } from './components/AdditionServicesList';
 import { TermsAndConditions } from './components/TermsAndConditions';
 import { Footer } from './components/Footer';
 import { AppProvider, useApp } from './context/AppContext';
@@ -34,6 +35,12 @@ function MainLandingPage() {
   const isDark = theme === 'dark';
   const activeCategory = categories.find((c) => c.id === activeCategoryId) || categories[0];
   const isTermsCategory = activeCategory?.type === 'terms';
+  const isAdditionCategory =
+    activeCategory?.id === 'addition' ||
+    activeCategory?.name.toLowerCase().includes('addition');
+  const isSendOffCategory =
+    activeCategory?.id === 'sendoff' ||
+    activeCategory?.name.toLowerCase().includes('send');
 
   // Filter packages for the active category
   const currentCategoryPackages = packages.filter(
@@ -102,7 +109,7 @@ function MainLandingPage() {
         {/* Category Navigation Tabs with TZS / USD Currency Switcher */}
         <CategoryTabs />
 
-        {/* Main Content View: Either Pricing Packages Grid OR Terms & Conditions Page */}
+        {/* Main Content View: Terms Page OR Addition Services Drop Lists OR Packages Grid */}
         {isTermsCategory ? (
           <TermsAndConditions
             onOpenBooking={() => {
@@ -112,8 +119,20 @@ function MainLandingPage() {
               }
             }}
           />
+        ) : isAdditionCategory ? (
+          <AdditionServicesList
+            packages={currentCategoryPackages}
+            onBook={handleSelectPackage}
+            onSelect={handleSelectPackage}
+          />
         ) : (
-          <main className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-6 lg:gap-5 xl:gap-6 items-stretch pt-2 pb-8">
+          <main
+            className={`pt-2 pb-8 items-stretch ${
+              isSendOffCategory
+                ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-6 lg:gap-6 max-w-5xl mx-auto justify-center'
+                : 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-6 lg:gap-5 xl:gap-6'
+            }`}
+          >
             {currentCategoryPackages.length > 0 ? (
               currentCategoryPackages.map((pkg) => (
                 <PackageCard
