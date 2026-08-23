@@ -1,5 +1,18 @@
 import { PricingPackage, ContactInfo, AppCategory, TermSection } from '../types';
 
+export const EVENT_TYPE_OPTIONS: string[] = [
+  'Wedding & reception',
+  'Send-off',
+  'Kitchen Party',
+  'Pre-wedding Shoot',
+  'Corporate event',
+  'Gala',
+  'Commercial',
+  'Studio Shoot',
+  'Photoshoot',
+  'Other celebration',
+];
+
 export const contactDetails: ContactInfo = {
   "email": "johanesgabriel08@gmail.com",
   "phone": "+255743705912",
@@ -211,26 +224,26 @@ export const packagesData: PricingPackage[] = [
     "buttonLabel": "Book Now",
     "features": [
       "Full Coverage",
-      "Two Photographer & THREE Videographer Professionals",
+      "Two Photographer & Three Videographer Professionals",
       "One assistant photographer & videographer",
-      "EIGHT 65 inches flat screen at the venue",
+      "Eight 65 inches flat screen at the venue",
       "Pre wedding session",
       "Video highlight",
       "Drone footage",
       "360 Videos booth",
-      "THREE A2 wooden frames",
+      "Three A2 wooden frames",
       "One A3 Photobook Professional designed",
       "Two flash disks with all Photos & Videos",
-      "Online gallery 600 high-resolution images & ONE YEAR access"
+      "Online gallery 600 high-resolution images & one year access"
     ],
     "sections": [
       {
         "subtitle": "Video and Photo Coverage:",
         "items": [
           "Full Coverage",
-          "Two Photographer & THREE Videographer Professionals",
+          "Two Photographer & Three Videographer Professionals",
           "One assistant photographer & videographer",
-          "EIGHT 65 inches flat screen at the venue",
+          "Eight 65 inches flat screen at the venue",
           "Pre wedding session"
         ]
       },
@@ -240,10 +253,10 @@ export const packagesData: PricingPackage[] = [
           "Video highlight",
           "Drone footage",
           "360 Videos booth",
-          "THREE A2 wooden frames",
+          "Three A2 wooden frames",
           "One A3 Photobook Professional designed",
           "Two flash disks with all Photos & Videos",
-          "Online gallery 600 high-resolution images & ONE YEAR access"
+          "Online gallery 600 high-resolution images & one year access"
         ]
       }
     ]
@@ -261,7 +274,7 @@ export const packagesData: PricingPackage[] = [
       "Full coverage",
       "One professional photographer & one professional videographer",
       "Four 65 inches led flat screen at the venue",
-      "video highlight",
+      "Video highlight",
       "Two A3 wooden frames",
       "One A3 photobook professional designed",
       "One flash disk with all photos & videos",
@@ -279,7 +292,7 @@ export const packagesData: PricingPackage[] = [
       {
         "subtitle": "Deliverable Includes:",
         "items": [
-          "video highlight",
+          "Video highlight",
           "Two A3 wooden frames",
           "One A3 photobook professional designed",
           "One flash disk with all photos & videos",
@@ -375,7 +388,8 @@ export const packagesData: PricingPackage[] = [
           "Online gallery with 400 high resolution images & 6 months access"
         ]
       }
-    ]
+    ],
+    "badge": "ROYAL"
   },
   {
     "id": "addition-extra-photo",

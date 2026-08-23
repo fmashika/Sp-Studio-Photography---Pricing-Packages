@@ -41,6 +41,7 @@ import { EditOrderModal } from './EditOrderModal';
 import { EditPackageModal } from './EditPackageModal';
 import { EditCategoryModal } from './EditCategoryModal';
 import { EditTermsModal } from './EditTermsModal';
+import { PackageIcon } from '../PackageIcon';
 
 interface AdminPanelProps {
   onClose: () => void;
@@ -839,7 +840,14 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                           </div>
                         </div>
 
-                        <h3 className="text-lg sm:text-xl font-black text-white uppercase">{pkg.name}</h3>
+                        <div className="flex items-center gap-2 mb-1">
+                          {pkg.iconType && pkg.iconType !== 'none' && (
+                            <div className="p-1.5 rounded-lg bg-amber-500/10 border border-amber-500/20 text-[#eab308] shrink-0">
+                              <PackageIcon iconType={pkg.iconType} className="w-4 h-4" />
+                            </div>
+                          )}
+                          <h3 className="text-lg sm:text-xl font-black text-white uppercase truncate">{pkg.name}</h3>
+                        </div>
                         <p className="text-base sm:text-lg font-black text-[#eab308] mt-0.5 mb-4">
                           {pkg.price}
                         </p>

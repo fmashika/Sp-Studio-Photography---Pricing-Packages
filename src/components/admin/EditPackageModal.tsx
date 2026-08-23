@@ -193,6 +193,20 @@ export const EditPackageModal: React.FC<EditPackageModalProps> = ({
     );
   };
 
+  // Update words/sentence of an item in a section
+  const handleUpdateItem = (sectionIndex: number, itemIndex: number, text: string) => {
+    setSections((prev) =>
+      prev.map((sec, idx) =>
+        idx === sectionIndex
+          ? {
+              ...sec,
+              items: sec.items.map((item, iIdx) => (iIdx === itemIndex ? text : item)),
+            }
+          : sec
+      )
+    );
+  };
+
   // Add item under section
   const handleAddItemToSection = (sectionIndex: number) => {
     const text = itemInputs[sectionIndex];
@@ -414,18 +428,29 @@ export const EditPackageModal: React.FC<EditPackageModalProps> = ({
 
           {/* Subtitle & Included Feature Sections Editor with Drag & Drop */}
           <div className="border-t border-white/10 pt-4">
-            <div className="flex items-center justify-between mb-3">
-              <label className="block text-xs font-bold text-[#eab308] uppercase tracking-wider">
-                FEATURE SECTIONS & SUBTITLES ({sections.length}) • DRAG & DROP ABOVE / BELOW
-              </label>
+            <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
+              <div>
+                <label className="block text-xs font-bold text-[#eab308] uppercase tracking-wider">
+                  FEATURE SECTIONS & SUBTITLES ({sections.length}) • DRAG & DROP ABOVE / BELOW
+                </label>
+                <p className="text-[11px] text-gray-400 mt-0.5">
+                  Click on any sentence or word to edit. Drag or use arrows to reorder.
+                </p>
+              </div>
 
               {sections.length > 0 && (
                 <button
                   type="button"
-                  onClick={() => setSections([])}
-                  className="text-[11px] text-red-400 hover:text-red-300 font-bold cursor-pointer"
+                  onClick={() => {
+                    if (window.confirm('Delete and remove all feature sections?')) {
+                      setSections([]);
+                    }
+                  }}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-[11px] text-red-400 hover:text-red-300 font-bold transition-colors cursor-pointer"
+                  title="Delete all feature sections"
                 >
-                  Delete All Sections
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span>Delete All Sections</span>
                 </button>
               )}
             </div>
@@ -434,7 +459,7 @@ export const EditPackageModal: React.FC<EditPackageModalProps> = ({
             {sections.length === 0 ? (
               <div className="p-4 bg-[#141414] border border-dashed border-white/15 rounded-2xl text-center text-xs text-gray-400 mb-4">
                 <AlertCircle className="w-4 h-4 text-gray-500 mx-auto mb-1" />
-                <span>No sections currently created. Add a subtitle section below.</span>
+                <span>No feature sections created. Add a subtitle section below.</span>
               </div>
             ) : (
               <div className="space-y-4 mb-4">
@@ -492,7 +517,7 @@ export const EditPackageModal: React.FC<EditPackageModalProps> = ({
 
                           <div className="flex-1">
                             <label className="block text-[10px] font-bold text-[#eab308] uppercase tracking-wider mb-1">
-                              Sub title:
+                              Subtitle Section #{sIdx + 1}:
                             </label>
                             <input
                               type="text"
@@ -507,24 +532,31 @@ export const EditPackageModal: React.FC<EditPackageModalProps> = ({
                         <button
                           type="button"
                           onClick={() => handleRemoveSection(sIdx)}
-                          className="text-red-400 hover:text-red-300 p-2 rounded-xl bg-red-500/10 hover:bg-red-500/20 transition-colors cursor-pointer mt-4 flex items-center gap-1 text-xs font-bold shrink-0"
+                          className="text-red-400 hover:text-red-300 p-2 rounded-xl bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 transition-colors cursor-pointer mt-4 flex items-center gap-1.5 text-xs font-bold shrink-0"
                           title="Delete this section"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
-                          <span className="hidden sm:inline">Delete</span>
+                          <span>Delete Section</span>
                         </button>
                       </div>
 
-                      {/* Star bullet list of items in this section with drag / reorder */}
-                      <div className="space-y-1.5 pl-6">
+                      {/* Editable list of items / sentences in this section with drag / reorder */}
+                      <div className="space-y-1.5 pl-2 sm:pl-6">
                         {sec.items.map((item, iIdx) => (
                           <div
                             key={iIdx}
-                            className="flex items-center justify-between gap-2 p-2 bg-[#1c1c1c] border border-white/10 rounded-xl text-xs text-white"
+                            className="flex items-center justify-between gap-2 p-2 bg-[#1c1c1c] border border-white/10 hover:border-white/25 rounded-xl text-xs text-white transition-all group"
                           >
                             <div className="flex items-center gap-2 min-w-0 flex-1">
-                              <span className="w-1.5 h-1.5 rounded-full bg-[#eab308] shrink-0" />
-                              <span className="truncate">{item}</span>
+                              <span className="w-2 h-2 rounded-full bg-[#eab308] shrink-0" />
+                              {/* Direct word/sentence editable input */}
+                              <input
+                                type="text"
+                                value={item}
+                                onChange={(e) => handleUpdateItem(sIdx, iIdx, e.target.value)}
+                                placeholder="Edit sentence or word..."
+                                className="w-full bg-transparent border-b border-transparent focus:border-[#eab308] text-xs text-white px-1.5 py-0.5 focus:outline-none transition-colors"
+                              />
                             </div>
 
                             <div className="flex items-center gap-1 shrink-0">
@@ -532,7 +564,7 @@ export const EditPackageModal: React.FC<EditPackageModalProps> = ({
                                 type="button"
                                 onClick={() => handleMoveItem(sIdx, iIdx, iIdx - 1)}
                                 disabled={iIdx === 0}
-                                className="p-1 text-gray-500 hover:text-white disabled:opacity-30 cursor-pointer"
+                                className="p-1 text-gray-500 hover:text-white disabled:opacity-20 cursor-pointer"
                                 title="Move item up"
                               >
                                 <ArrowUp className="w-3 h-3" />
@@ -541,7 +573,7 @@ export const EditPackageModal: React.FC<EditPackageModalProps> = ({
                                 type="button"
                                 onClick={() => handleMoveItem(sIdx, iIdx, iIdx + 1)}
                                 disabled={iIdx === sec.items.length - 1}
-                                className="p-1 text-gray-500 hover:text-white disabled:opacity-30 cursor-pointer"
+                                className="p-1 text-gray-500 hover:text-white disabled:opacity-20 cursor-pointer"
                                 title="Move item down"
                               >
                                 <ArrowDown className="w-3 h-3" />
@@ -549,10 +581,10 @@ export const EditPackageModal: React.FC<EditPackageModalProps> = ({
                               <button
                                 type="button"
                                 onClick={() => handleRemoveItem(sIdx, iIdx)}
-                                className="text-gray-400 hover:text-red-400 p-1 cursor-pointer"
-                                title="Delete item"
+                                className="text-gray-400 hover:text-red-400 p-1 rounded-lg hover:bg-red-500/10 transition-colors cursor-pointer"
+                                title="Delete item sentence"
                               >
-                                <Trash2 className="w-3 h-3" />
+                                <Trash2 className="w-3.5 h-3.5" />
                               </button>
                             </div>
                           </div>
@@ -560,7 +592,7 @@ export const EditPackageModal: React.FC<EditPackageModalProps> = ({
                       </div>
 
                       {/* Add item to this section */}
-                      <div className="flex gap-2 pt-1 pl-6">
+                      <div className="flex gap-2 pt-1 pl-2 sm:pl-6">
                         <input
                           type="text"
                           value={itemInputs[sIdx] || ''}
@@ -571,16 +603,16 @@ export const EditPackageModal: React.FC<EditPackageModalProps> = ({
                               handleAddItemToSection(sIdx);
                             }
                           }}
-                          placeholder="Add item under this subtitle..."
+                          placeholder="Add new item sentence under this subtitle..."
                           className="flex-1 bg-[#1c1c1c] border border-white/20 rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none focus:border-[#eab308]"
                         />
                         <button
                           type="button"
                           onClick={() => handleAddItemToSection(sIdx)}
-                          className="bg-[#2a2a2a] hover:bg-[#383838] border border-white/20 text-white px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1 cursor-pointer"
+                          className="bg-[#2a2a2a] hover:bg-[#383838] border border-white/20 text-white px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1 cursor-pointer shrink-0"
                         >
                           <Plus className="w-3 h-3 text-[#eab308]" />
-                          <span>Add</span>
+                          <span>Add Item</span>
                         </button>
                       </div>
                     </div>

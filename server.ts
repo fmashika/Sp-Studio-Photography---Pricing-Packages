@@ -73,6 +73,19 @@ function saveStateToDisk() {
 
       const fileContent = `import { PricingPackage, ContactInfo, AppCategory, TermSection } from '../types';
 
+export const EVENT_TYPE_OPTIONS: string[] = [
+  'Wedding & reception',
+  'Send-off',
+  'Kitchen Party',
+  'Pre-wedding Shoot',
+  'Corporate event',
+  'Gala',
+  'Commercial',
+  'Studio Shoot',
+  'Photoshoot',
+  'Other celebration',
+];
+
 export const contactDetails: ContactInfo = ${JSON.stringify(contacts, null, 2)};
 
 export const defaultCategories: AppCategory[] = ${JSON.stringify(categories, null, 2)};

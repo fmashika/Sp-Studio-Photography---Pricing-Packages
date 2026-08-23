@@ -3,6 +3,7 @@ import { X, Phone, Mail, Calendar, User, Check, BookmarkCheck } from 'lucide-rea
 import { PricingPackage } from '../types';
 import { useApp } from '../context/AppContext';
 import { SpLogo } from './SpLogo';
+import { EVENT_TYPE_OPTIONS } from '../data/pricingData';
 
 interface BookingModalProps {
   pkg: PricingPackage | null;
@@ -17,7 +18,7 @@ export const BookingModal: React.FC<BookingModalProps> = ({ pkg, isOpen, onClose
   const [clientName, setClientName] = useState('');
   const [phone, setPhone] = useState('');
   const [eventDate, setEventDate] = useState('');
-  const [eventType, setEventType] = useState('Wedding & Reception');
+  const [eventType, setEventType] = useState('Wedding & reception');
   const [notes, setNotes] = useState('');
   const [isSuccess, setIsSuccess] = useState(false);
   const [hasLoadedSaved, setHasLoadedSaved] = useState(false);
@@ -31,8 +32,14 @@ export const BookingModal: React.FC<BookingModalProps> = ({ pkg, isOpen, onClose
       if (savedCustomer.eventType) setEventType(savedCustomer.eventType);
       if (savedCustomer.notes) setNotes(savedCustomer.notes);
       setHasLoadedSaved(true);
+    } else if (isOpen && pkg) {
+      if (pkg.categoryId === 'sendoff') {
+        setEventType('Send-off');
+      } else {
+        setEventType('Wedding & reception');
+      }
     }
-  }, [isOpen, savedCustomer]);
+  }, [isOpen, savedCustomer, pkg]);
 
   if (!isOpen || !pkg) return null;
 
@@ -290,13 +297,23 @@ export const BookingModal: React.FC<BookingModalProps> = ({ pkg, isOpen, onClose
                   : 'bg-gray-50 border border-gray-300 text-gray-900 focus:border-[#ca8a04] focus:ring-[#ca8a04] font-bold'
               }`}
             >
-              <option value="Wedding & Reception" className={isDark ? 'bg-[#171717] text-white font-normal' : 'bg-white text-gray-900 font-bold'}>Wedding & Reception</option>
-              <option value="Send-off / Kitchen Party" className={isDark ? 'bg-[#171717] text-white font-normal' : 'bg-white text-gray-900 font-bold'}>Send-off / Kitchen Party</option>
-              <option value="Pre-Wedding Shoot" className={isDark ? 'bg-[#171717] text-white font-normal' : 'bg-white text-gray-900 font-bold'}>Pre-Wedding Shoot</option>
-              <option value="Corporate Event / Gala" className={isDark ? 'bg-[#171717] text-white font-normal' : 'bg-white text-gray-900 font-bold'}>Corporate Event / Gala</option>
-              <option value="Birthday / Anniversary" className={isDark ? 'bg-[#171717] text-white font-normal' : 'bg-white text-gray-900 font-bold'}>Birthday / Anniversary</option>
-              <option value="Commercial / Studio Shoot" className={isDark ? 'bg-[#171717] text-white font-normal' : 'bg-white text-gray-900 font-bold'}>Commercial / Studio Shoot</option>
-              <option value="Other Celebration" className={isDark ? 'bg-[#171717] text-white font-normal' : 'bg-white text-gray-900 font-bold'}>Other Celebration</option>
+              {EVENT_TYPE_OPTIONS.map((opt) => (
+                <option
+                  key={opt}
+                  value={opt}
+                  className={isDark ? 'bg-[#171717] text-white font-normal' : 'bg-white text-gray-900 font-bold'}
+                >
+                  {opt}
+                </option>
+              ))}
+              {!EVENT_TYPE_OPTIONS.includes(eventType) && eventType && (
+                <option
+                  value={eventType}
+                  className={isDark ? 'bg-[#171717] text-white font-normal' : 'bg-white text-gray-900 font-bold'}
+                >
+                  {eventType}
+                </option>
+              )}
             </select>
           </div>
 

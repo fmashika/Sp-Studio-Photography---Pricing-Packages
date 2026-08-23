@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { X, Save, MessageSquareText, Phone, Trash2 } from 'lucide-react';
 import { BookingOrder, OrderStatus } from '../../types';
 import { useApp } from '../../context/AppContext';
+import { EVENT_TYPE_OPTIONS } from '../../data/pricingData';
 
 interface EditOrderModalProps {
   order: BookingOrder | null;
@@ -165,12 +166,22 @@ export const EditOrderModal: React.FC<EditOrderModalProps> = ({ order, isOpen, o
             <label className="block text-xs font-medium text-white mb-1.5">
               Event Type
             </label>
-            <input
-              type="text"
+            <select
               value={eventType}
               onChange={(e) => setEventType(e.target.value)}
               className="w-full bg-[#181818] border border-white/20 rounded-2xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-[#eab308]"
-            />
+            >
+              {EVENT_TYPE_OPTIONS.map((opt) => (
+                <option key={opt} value={opt} className="bg-[#181818] text-white">
+                  {opt}
+                </option>
+              ))}
+              {!EVENT_TYPE_OPTIONS.includes(eventType) && eventType && (
+                <option value={eventType} className="bg-[#181818] text-white">
+                  {eventType}
+                </option>
+              )}
+            </select>
           </div>
 
           <div>

@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { ChevronDown, ChevronUp, Search } from 'lucide-react';
 import { PricingPackage } from '../types';
 import { useApp } from '../context/AppContext';
+import { PackageIcon } from './PackageIcon';
 
 interface AdditionServicesListProps {
   packages: PricingPackage[];
@@ -114,9 +115,15 @@ export const AdditionServicesList: React.FC<AdditionServicesListProps> = ({
               >
                 {/* Main List Item Row */}
                 <div className="p-3.5 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                  {/* Left: Bullet Dot + Service Name */}
+                  {/* Left: Icon or Bullet Dot + Service Name */}
                   <div className="flex items-center gap-3 min-w-0 flex-1">
-                    <span className="w-2 h-2 rounded-full bg-[#ca8a04] dark:bg-[#eab308] shrink-0 inline-block" />
+                    {item.iconType && item.iconType !== 'none' ? (
+                      <div className="p-1.5 rounded-lg bg-amber-500/10 dark:bg-amber-400/10 border border-amber-500/20 text-[#ca8a04] dark:text-[#eab308] shrink-0">
+                        <PackageIcon iconType={item.iconType} className="w-4 h-4" />
+                      </div>
+                    ) : (
+                      <span className="w-2 h-2 rounded-full bg-[#ca8a04] dark:bg-[#eab308] shrink-0 inline-block" />
+                    )}
                     <h3
                       className={`text-sm sm:text-base font-extrabold tracking-tight truncate ${
                         isDark ? 'text-white' : 'text-gray-950'

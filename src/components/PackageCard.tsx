@@ -1,6 +1,7 @@
 import React from 'react';
 import { PricingPackage } from '../types';
 import { useApp } from '../context/AppContext';
+import { PackageIcon } from './PackageIcon';
 
 interface PackageCardProps {
   pkg: PricingPackage;
@@ -69,6 +70,15 @@ export const PackageCard: React.FC<PackageCardProps> = ({
         {/* Package Header */}
         <div className="relative z-10">
           <div className="text-center pb-6 border-b border-black/10 dark:border-white/10">
+            {/* Icon Style Rendering (active when selected, omitted when none/removed) */}
+            {pkg.iconType && pkg.iconType !== 'none' && (
+              <div className="flex justify-center mb-3">
+                <div className="inline-flex items-center justify-center p-2.5 rounded-2xl bg-amber-500/10 dark:bg-amber-400/10 border border-amber-500/25 dark:border-amber-400/20 text-[#ca8a04] dark:text-[#eab308] shadow-sm">
+                  <PackageIcon iconType={pkg.iconType} className="w-5 h-5 sm:w-6 sm:h-6" />
+                </div>
+              </div>
+            )}
+
             <h3
               style={{
                 fontSize: `${calculatedTitlePx}px`,
