@@ -18,17 +18,6 @@ import {
   defaultTerms,
 } from '../data/pricingData';
 import { initialOrders } from '../data/initialData';
-import {
-  db,
-  auth,
-  testFirestoreConnection,
-  loginWithGoogle,
-  logoutUser,
-  handleFirestoreError,
-  OperationType,
-} from '../lib/firebase';
-import { doc, setDoc, getDoc, updateDoc, deleteDoc } from 'firebase/firestore';
-import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
 
 interface AppContextType {
   // Theme & Currency
@@ -63,12 +52,6 @@ interface AppContextType {
   isAdminLoggedIn: boolean;
   unreadOrdersCount: number;
   setActiveCategoryId: (categoryId: string) => void;
-
-  // Firebase Auth State
-  firebaseUser: FirebaseUser | null;
-  loginWithGoogleAuth: () => Promise<void>;
-  logoutFirebaseAuth: () => Promise<void>;
-  isFirebaseConnected: boolean;
 
   // Category management
   addCategory: (cat: Omit<AppCategory, 'id'>) => AppCategory;
@@ -212,51 +195,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   });
 
-  // 10. Firebase Auth & Connection State
-  const [firebaseUser, setFirebaseUser] = useState<FirebaseUser | null>(null);
-  const [isFirebaseConnected, setIsFirebaseConnected] = useState<boolean>(false);
-
-  // Initialize Firebase Auth Listener & Test Connection
-  useEffect(() => {
-    testFirestoreConnection().then((connected) => {
-      setIsFirebaseConnected(connected);
-    });
-
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setFirebaseUser(user);
-      if (user && (user.email === 'fadhilimashika@gmail.com' || user.emailVerified)) {
-        setIsAdminLoggedIn(true);
-        sessionStorage.setItem(STORAGE_KEYS.ADMIN_AUTH, 'true');
-      }
-    });
-
-    return () => unsubscribe();
-  }, []);
-
-  const loginWithGoogleAuth = async () => {
-    try {
-      const user = await loginWithGoogle();
-      if (user) {
-        setFirebaseUser(user);
-        setIsAdminLoggedIn(true);
-        sessionStorage.setItem(STORAGE_KEYS.ADMIN_AUTH, 'true');
-      }
-    } catch (err) {
-      console.error('Firebase Google Sign In Failed:', err);
-      throw err;
-    }
-  };
-
-  const logoutFirebaseAuth = async () => {
-    try {
-      await logoutUser();
-      setFirebaseUser(null);
-      logoutAdmin();
-    } catch (err) {
-      console.error('Firebase Logout Error:', err);
-    }
-  };
-
   // Ref to always access latest state synchronously without re-triggering effects
   const latestStateRef = useRef({
     categories,
@@ -317,20 +255,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
-
-      // 2. Sync to Firebase Firestore System State (non-blocking)
-      try {
-        await setDoc(doc(db, 'system_state', 'sp_studio_config'), {
-          id: 'sp_studio_config',
-          updatedAt: new Date().toISOString(),
-          exchangeRate: TZS_TO_USD_RATE,
-          categoriesCount: currentState.categories.length,
-          packagesCount: currentState.packages.length,
-          ordersCount: currentState.orders.length,
-        }, { merge: true });
-      } catch (firestoreErr) {
-        console.warn('Firestore system_state sync note:', firestoreErr);
-      }
 
       if (res.ok) {
         setSyncStatus('synced');
@@ -676,17 +600,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     setOrders((prev) => [newOrder, ...prev]);
 
-    // Persist to Firebase Firestore with strict Error Handling
-    setDoc(doc(db, 'orders', newOrder.id), newOrder).catch((err) => {
-      console.warn('Firebase Firestore Order write note:', err);
-      // Non-blocking in UI, wrapped with handleFirestoreError for diagnostics
-      try {
-        handleFirestoreError(err, OperationType.CREATE, `orders/${newOrder.id}`);
-      } catch (e) {
-        // Error logged to console for Firestore audit
-      }
-    });
-
     return newOrder;
   };
 
@@ -694,31 +607,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setOrders((prev) =>
       prev.map((o) => (o.id === orderId ? { ...o, status } : o))
     );
-
-    // Sync status change to Firebase Firestore
-    updateDoc(doc(db, 'orders', orderId), { status }).catch((err) => {
-      console.warn('Firestore update order status note:', err);
-    });
   };
 
   const updateOrder = (orderId: string, updatedFields: Partial<BookingOrder>) => {
     setOrders((prev) =>
       prev.map((o) => (o.id === orderId ? { ...o, ...updatedFields } : o))
     );
-
-    // Sync order update to Firebase Firestore
-    updateDoc(doc(db, 'orders', orderId), updatedFields).catch((err) => {
-      console.warn('Firestore update order note:', err);
-    });
   };
 
   const deleteOrder = (orderId: string) => {
     setOrders((prev) => prev.filter((o) => o.id !== orderId));
-
-    // Delete from Firebase Firestore
-    deleteDoc(doc(db, 'orders', orderId)).catch((err) => {
-      console.warn('Firestore delete order note:', err);
-    });
   };
 
   // Package Actions
@@ -857,10 +755,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         systemVersion: CURRENT_APP_VERSION,
         lastSyncTime,
         pushLiveUpdate,
-        firebaseUser,
-        loginWithGoogleAuth,
-        logoutFirebaseAuth,
-        isFirebaseConnected,
       }}
     >
       {children}
