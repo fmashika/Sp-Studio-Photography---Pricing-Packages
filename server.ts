@@ -146,9 +146,8 @@ app.get('/api/system', async (req, res) => {
   res.setHeader('Expires', '0');
   res.setHeader('Surrogate-Control', 'no-store');
 
-  if (!systemState) {
-    await loadInitialState();
-  }
+  // Always fetch latest from database to prevent stale in-memory cache on page refresh
+  await loadInitialState();
 
   res.json({
     success: true,
