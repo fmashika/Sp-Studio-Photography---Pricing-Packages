@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secure Admin Panel</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Supabase JS CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="bg-gray-50 text-gray-900 font-sans p-6 min-h-screen">
+    <div id="app" class="max-w-5xl mx-auto">
+        <!-- Header -->
+        <header class="flex justify-between items-center mb-8 pb-4 border-b">
+            <h1 class="text-2xl font-bold">Pricing Packages Admin</h1>
+            <button id="logout-btn" class="hidden bg-gray-200 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-300 font-semibold text-sm transition-colors">
+                Logout
+            </button>
+        </header>
+
+        <!-- Login Screen -->
+        <div id="login-screen" class="max-w-md mx-auto bg-white p-8 rounded-xl shadow-sm border border-gray-200 mt-12">
+            <h2 class="text-xl font-bold mb-6 text-center">Secure Authentication</h2>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-semibold mb-1">Email</label>
+                    <input type="email" id="email" class="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="admin@example.com">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold mb-1">Password</label>
+                    <input type="password" id="password" class="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="••••••••">
+                </div>
+                <button id="login-btn" class="w-full bg-blue-600 text-white font-bold py-2.5 rounded-lg hover:bg-blue-700 transition-colors">Login</button>
+                <p id="login-error" class="text-red-500 text-sm hidden text-center"></p>
+            </div>
+        </div>
+
+        <!-- Dashboard Screen -->
+        <div id="dashboard-screen" class="hidden">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <!-- Form Sidebar -->
+                <div class="md:col-span-1 bg-white p-6 rounded-xl shadow-sm border border-gray-200 h-fit sticky top-6">
+                    <h2 id="form-title" class="text-lg font-bold mb-4">Add New Package</h2>
+                    <input type="hidden" id="pkg-id">
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-semibold mb-1">Package Title</label>
+                            <input type="text" id="pkg-title" class="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="e.g. Gold Wedding">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold mb-1">Price</label>
+                            <input type="text" id="pkg-price" class="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="e.g. $1,200">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold mb-1">Description</label>
+                            <textarea id="pkg-desc" class="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none" rows="4" placeholder="Package details..."></textarea>
+                        </div>
+                        <div class="flex gap-2 pt-2">
+                            <button id="save-btn" class="flex-1 bg-blue-600 text-white font-bold py-2 rounded-lg hover:bg-blue-700 transition-colors">Save</button>
+                            <button id="cancel-btn" class="hidden flex-1 bg-gray-500 text-white font-bold py-2 rounded-lg hover:bg-gray-600 transition-colors">Cancel Edit</button>
+                        </div>
+                        <p id="form-error" class="text-red-500 text-sm hidden text-center"></p>
+                    </div>
+                </div>
+
+                <!-- Packages List -->
+                <div class="md:col-span-2">
+                    <div id="loading-state" class="text-center py-10 text-gray-500 hidden">Loading packages...</div>
+                    <div class="space-y-4" id="packages-list">
+                        <!-- Packages rendered via JS -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Supabase Initialization
+        // The URL needs to be the base URL without /rest/v1/
+        const supabaseUrl = 'https://veineyycewdljbyfkdmb.supabase.co';
+        const supabaseKey = 'sb_publishable_L14I-tmPEif3KKHbn6Lg2g_iRINofK3';
+        const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
+
+        // DOM Elements
+        const loginScreen = document.getElementById('login-screen');
+        const dashboardScreen = document.getElementById('dashboard-screen');
+        const logoutBtn = document.getElementById('logout-btn');
+        const packagesList = document.getElementById('packages-list');
+        const loadingState = document.getElementById('loading-state');
+        
+        // Login Elements
+        const loginBtn = document.getElementById('login-btn');
+        const emailInput = document.getElementById('email');
+        const passwordInput = document.getElementById('password');
+        const loginError = document.getElementById('login-error');
+
+        // Form Elements
+        const formTitle = document.getElementById('form-title');
+        const pkgIdInput = document.getElementById('pkg-id');
+        const pkgTitleInput = document.getElementById('pkg-title');
+        const pkgPriceInput = document.getElementById('pkg-price');
+        const pkgDescInput = document.getElementById('pkg-desc');
+        const saveBtn = document.getElementById('save-btn');
+        const cancelBtn = document.getElementById('cancel-btn');
+        const formError = document.getElementById('form-error');
+
+        // State
+        let currentSession = null;
+        let packages = [];
+
+        // Check Session on Load
+        async function checkSession() {
+            const { data: { session } } = await _supabase.auth.getSession();
+            currentSession = session;
+            
+            // Listen for auth changes
+            _supabase.auth.onAuthStateChange((_event, session) => {
+                currentSession = session;
+                updateUI();
+            });
+            
+            updateUI();
+        }
+
+        function updateUI() {
+            if (currentSession) {
+                loginScreen.classList.add('hidden');
+                dashboardScreen.classList.remove('hidden');
+                logoutBtn.classList.remove('hidden');
+                fetchPackages();
+            } else {
+                loginScreen.classList.remove('hidden');
+                dashboardScreen.classList.add('hidden');
+                logoutBtn.classList.add('hidden');
+                resetForm();
+            }
+        }
+
+        // Auth Logic
+        loginBtn.addEventListener('click', async () => {
+            const email = emailInput.value;
+            const password = passwordInput.value;
+            
+            loginBtn.textContent = 'Logging in...';
+            loginBtn.disabled = true;
+            loginError.classList.add('hidden');
+
+            const { data, error } = await _supabase.auth.signInWithPassword({
+                email,
+                password
+            });
+
+            if (error) {
+                loginError.textContent = error.message;
+                loginError.classList.remove('hidden');
+            }
+            
+            loginBtn.textContent = 'Login';
+            loginBtn.disabled = false;
+        });
+
+        logoutBtn.addEventListener('click', async () => {
+            await _supabase.auth.signOut();
+        });
+
+        // Data Logic
+        async function fetchPackages() {
+            loadingState.classList.remove('hidden');
+            packagesList.innerHTML = '';
+            
+            const { data, error } = await _supabase.from('packages')
+                .select('*')
+                .order('created_at', { ascending: false });
+
+            loadingState.classList.add('hidden');
+
+            if (error) {
+                console.error('Error fetching packages:', error);
+                return;
+            }
+
+            packages = data;
+            renderPackages();
+        }
+
+        function renderPackages() {
+            packagesList.innerHTML = '';
+            
+            if (packages.length === 0) {
+                packagesList.innerHTML = '<div class="text-center py-10 bg-white border rounded-xl text-gray-500">No packages found. Create one!</div>';
+                return;
+            }
+
+            packages.forEach(pkg => {
+                const card = document.createElement('div');
+                card.className = 'bg-white p-5 rounded-xl shadow-sm border border-gray-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4';
+                
+                card.innerHTML = `
+                    <div class="flex-1">
+                        <h3 class="text-lg font-bold">${escapeHtml(pkg.title)}</h3>
+                        <p class="text-sm font-semibold text-blue-600 mb-1">${escapeHtml(pkg.price)}</p>
+                        <p class="text-sm text-gray-600">${escapeHtml(pkg.description || '')}</p>
+                    </div>
+                    <div class="flex gap-2 shrink-0">
+                        <button onclick="editPackage('${pkg.id}')" class="px-3 py-1.5 bg-gray-100 text-gray-700 text-sm font-bold rounded hover:bg-gray-200 transition-colors">Edit</button>
+                        <button onclick="deletePackage('${pkg.id}')" class="px-3 py-1.5 bg-red-50 text-red-600 text-sm font-bold rounded hover:bg-red-100 transition-colors">Delete</button>
+                    </div>
+                `;
+                packagesList.appendChild(card);
+            });
+        }
+
+        // Form Logic
+        saveBtn.addEventListener('click', async () => {
+            const id = pkgIdInput.value;
+            const title = pkgTitleInput.value.trim();
+            const price = pkgPriceInput.value.trim();
+            const description = pkgDescInput.value.trim();
+
+            if (!title || !price) {
+                formError.textContent = 'Title and Price are required.';
+                formError.classList.remove('hidden');
+                return;
+            }
+
+            saveBtn.textContent = 'Saving...';
+            saveBtn.disabled = true;
+            formError.classList.add('hidden');
+
+            const payload = { title, price, description };
+            let response;
+
+            if (id) {
+                // Update
+                response = await _supabase.from('packages').update(payload).eq('id', id);
+            } else {
+                // Insert
+                response = await _supabase.from('packages').insert([payload]);
+            }
+
+            saveBtn.textContent = 'Save';
+            saveBtn.disabled = false;
+
+            if (response.error) {
+                formError.textContent = response.error.message;
+                formError.classList.remove('hidden');
+            } else {
+                resetForm();
+                fetchPackages();
+            }
+        });
+
+        cancelBtn.addEventListener('click', resetForm);
+
+        window.editPackage = (id) => {
+            const pkg = packages.find(p => p.id === id);
+            if (!pkg) return;
+
+            formTitle.textContent = 'Edit Package';
+            pkgIdInput.value = pkg.id;
+            pkgTitleInput.value = pkg.title;
+            pkgPriceInput.value = pkg.price;
+            pkgDescInput.value = pkg.description || '';
+            
+            cancelBtn.classList.remove('hidden');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        };
+
+        window.deletePackage = async (id) => {
+            if (!confirm('Are you sure you want to delete this package?')) return;
+            
+            const { error } = await _supabase.from('packages').delete().eq('id', id);
+            if (error) {
+                alert('Error deleting package: ' + error.message);
+            } else {
+                fetchPackages();
+            }
+        };
+
+        function resetForm() {
+            formTitle.textContent = 'Add New Package';
+            pkgIdInput.value = '';
+            pkgTitleInput.value = '';
+            pkgPriceInput.value = '';
+            pkgDescInput.value = '';
+            formError.classList.add('hidden');
+            cancelBtn.classList.add('hidden');
+        }
+
+        // Utility to prevent XSS
+        function escapeHtml(unsafe) {
+            return (unsafe || '').toString()
+                 .replace(/&/g, "&amp;")
+                 .replace(/</g, "&lt;")
+                 .replace(/>/g, "&gt;")
+                 .replace(/"/g, "&quot;")
+                 .replace(/'/g, "&#039;");
+        }
+
+        // Initialize
+        checkSession();
+    </script>
+</body>
+</html>
