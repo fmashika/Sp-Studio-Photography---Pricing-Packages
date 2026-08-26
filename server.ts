@@ -2,12 +2,6 @@ import express from 'express';
 import path from 'path';
 import fs from 'fs';
 import { createServer as createViteServer } from 'vite';
-import { createClient } from '@supabase/supabase-js';
-
-const supabaseUrl = 'https://veineyycewdljbyfkdmb.supabase.co';
-const supabaseKey = 'sb_publishable_L14I-tmPEif3KKHbn6Lg2g_iRINofK3';
-const supabase = createClient(supabaseUrl, supabaseKey);
-const SUPABASE_STATE_ID = 'sp_studio_config_v1';
 
 const app = express();
 const PORT = 3000;
@@ -52,17 +46,7 @@ try {
 // In-memory state cache
 let systemState: any = null;
 
-async function loadInitialState() {
-  try {
-    const { data, error } = await supabase.from('app_config').select('data').eq('id', SUPABASE_STATE_ID).single();
-    if (data && data.data) {
-      systemState = data.data;
-      return;
-    }
-  } catch (e) {
-    // console.warn('Supabase config not found, falling back to local file.');
-  }
-
+function loadInitialState() {
   try {
     if (fs.existsSync(DATA_FILE)) {
       const content = fs.readFileSync(DATA_FILE, 'utf-8');
@@ -77,19 +61,7 @@ async function loadInitialState() {
 
 loadInitialState();
 
-async function saveStateToDisk() {
-  try {
-    const { data: existing } = await supabase.from('app_config').select('id').eq('id', SUPABASE_STATE_ID).single();
-    
-    if (existing) {
-      await supabase.from('app_config').update({ data: systemState, updated_at: new Date().toISOString() }).eq('id', SUPABASE_STATE_ID);
-    } else {
-      await supabase.from('app_config').insert([{ id: SUPABASE_STATE_ID, data: systemState }]);
-    }
-  } catch (e) {
-    console.error('Error saving to Supabase:', e);
-  }
-
+function saveStateToDisk() {
   try {
     if (!fs.existsSync(DATA_DIR)) {
       fs.mkdirSync(DATA_DIR, { recursive: true });
@@ -140,14 +112,15 @@ app.get('/api/health', (req, res) => {
 });
 
 // Fetch current live system configuration with zero caching
-app.get('/api/system', async (req, res) => {
+app.get('/api/system', (req, res) => {
   res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0');
   res.setHeader('Pragma', 'no-cache');
   res.setHeader('Expires', '0');
   res.setHeader('Surrogate-Control', 'no-store');
 
-  // Always fetch latest from database to prevent stale in-memory cache on page refresh
-  await loadInitialState();
+  if (!systemState) {
+    loadInitialState();
+  }
 
   res.json({
     success: true,
@@ -158,7 +131,7 @@ app.get('/api/system', async (req, res) => {
 });
 
 // Direct admin update/publish to live system with zero delay
-app.post('/api/system/sync', async (req, res) => {
+app.post('/api/system/sync', (req, res) => {
   try {
     const payload = req.body;
     if (!payload || typeof payload !== 'object') {
@@ -172,7 +145,7 @@ app.post('/api/system/sync', async (req, res) => {
       updatedAt: new Date().toISOString(),
     };
 
-    await saveStateToDisk();
+    saveStateToDisk();
 
     return res.json({
       success: true,
