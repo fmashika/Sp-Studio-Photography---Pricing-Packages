@@ -2,8 +2,6 @@ import React, { useState, Suspense, lazy } from 'react';
 import { Header } from './components/Header';
 import { CategoryTabs } from './components/CategoryTabs';
 import { PackageCard } from './components/PackageCard';
-import { AdditionServicesList } from './components/AdditionServicesList';
-import { TermsAndConditions } from './components/TermsAndConditions';
 import { Footer } from './components/Footer';
 import { AppProvider, useApp } from './context/AppContext';
 import { PricingPackage } from './types';
@@ -20,6 +18,12 @@ const AdminLoginModal = lazy(() =>
 );
 const AdminPanel = lazy(() =>
   import('./components/admin/AdminPanel').then((m) => ({ default: m.AdminPanel }))
+);
+const TermsAndConditions = lazy(() =>
+  import('./components/TermsAndConditions').then((m) => ({ default: m.TermsAndConditions }))
+);
+const AdditionServicesList = lazy(() =>
+  import('./components/AdditionServicesList').then((m) => ({ default: m.AdditionServicesList }))
 );
 
 function MainLandingPage() {
@@ -111,20 +115,24 @@ function MainLandingPage() {
 
         {/* Main Content View: Terms Page OR Addition Services Drop Lists OR Packages Grid */}
         {isTermsCategory ? (
-          <TermsAndConditions
-            onOpenBooking={() => {
-              if (packages.length > 0) {
-                setSelectedPackage(packages[0]);
-                setIsBookingModalOpen(true);
-              }
-            }}
-          />
+          <Suspense fallback={<div className="py-20 text-center"><div className="w-8 h-8 mx-auto border-2 border-[#eab308] border-t-transparent rounded-full animate-spin" /></div>}>
+            <TermsAndConditions
+              onOpenBooking={() => {
+                if (packages.length > 0) {
+                  setSelectedPackage(packages[0]);
+                  setIsBookingModalOpen(true);
+                }
+              }}
+            />
+          </Suspense>
         ) : isAdditionCategory ? (
-          <AdditionServicesList
-            packages={currentCategoryPackages}
-            onBook={handleSelectPackage}
-            onSelect={handleSelectPackage}
-          />
+          <Suspense fallback={<div className="py-20 text-center"><div className="w-8 h-8 mx-auto border-2 border-[#eab308] border-t-transparent rounded-full animate-spin" /></div>}>
+            <AdditionServicesList
+              packages={currentCategoryPackages}
+              onBook={handleSelectPackage}
+              onSelect={handleSelectPackage}
+            />
+          </Suspense>
         ) : (
           <main
             className={`pt-2 pb-8 items-stretch ${
