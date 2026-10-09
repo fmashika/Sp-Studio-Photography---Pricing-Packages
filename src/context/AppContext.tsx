@@ -18,6 +18,7 @@ import {
   defaultTerms,
 } from '../data/pricingData';
 import { initialOrders } from '../data/initialData';
+import { safeStorage, safeSession } from '../lib/safeStorage';
 
 interface AppContextType {
   // Theme & Currency
@@ -123,7 +124,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // 1. Theme State (Dark by default, toggles to Light)
   const [theme, setTheme] = useState<ThemeMode>(() => {
     try {
-      const saved = localStorage.getItem(STORAGE_KEYS.THEME);
+      const saved = safeStorage.getItem(STORAGE_KEYS.THEME);
       return saved === 'light' ? 'light' : 'dark';
     } catch {
       return 'dark';
@@ -133,7 +134,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // 2. Currency State (TZS by default, toggles to USD)
   const [currency, setCurrency] = useState<CurrencyType>(() => {
     try {
-      const saved = localStorage.getItem(STORAGE_KEYS.CURRENCY);
+      const saved = safeStorage.getItem(STORAGE_KEYS.CURRENCY);
       return saved === 'USD' ? 'USD' : 'TZS';
     } catch {
       return 'TZS';
@@ -143,7 +144,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // 3. Package Title Font Size Scaling Percentage (1% to 100%, defaults to 100%)
   const [packageTitleFontSizePercent, setPackageTitleFontSizePercentState] = useState<number>(() => {
     try {
-      const saved = localStorage.getItem(STORAGE_KEYS.PACKAGE_TITLE_FONT_SIZE);
+      const saved = safeStorage.getItem(STORAGE_KEYS.PACKAGE_TITLE_FONT_SIZE);
       if (saved) {
         const val = Number(saved);
         if (!isNaN(val) && val >= 1 && val <= 100) return val;
@@ -162,7 +163,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // 3. Saved Customer Details (Remembered to reduce duplicate typing)
   const [savedCustomer, setSavedCustomer] = useState<SavedCustomerDetails | null>(() => {
     try {
-      const saved = localStorage.getItem(STORAGE_KEYS.SAVED_CUSTOMER);
+      const saved = safeStorage.getItem(STORAGE_KEYS.SAVED_CUSTOMER);
       return saved ? JSON.parse(saved) : null;
     } catch {
       return null;
@@ -189,7 +190,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // 9. Admin Auth State
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState<boolean>(() => {
     try {
-      return sessionStorage.getItem(STORAGE_KEYS.ADMIN_AUTH) === 'true';
+      return safeSession.getItem(STORAGE_KEYS.ADMIN_AUTH) === 'true';
     } catch {
       return false;
     }
@@ -271,39 +272,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   }, [broadcastState]);
 
-  // Comprehensive cleaner: Clears Cookies, CacheStorage, and stale Site Data on reload and on schedule
-  const clearCookiesAndSiteData = useCallback(async () => {
+  // Safe cleanup of stale legacy keys without thrashing browser cache storage
+  const clearStaleDataKeys = useCallback(() => {
     try {
-      // 1. Clear all browser cookies
-      if (typeof document !== 'undefined' && document.cookie) {
-        const cookies = document.cookie.split(';');
-        for (const cookie of cookies) {
-          const eqPos = cookie.indexOf('=');
-          const name = eqPos > -1 ? cookie.substr(0, eqPos).trim() : cookie.trim();
-          if (name) {
-            document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;SameSite=Lax`;
-            document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;domain=${window.location.hostname};SameSite=Lax`;
-          }
-        }
-      }
-
-      // 2. Clear browser CacheStorage (Service Workers & Assets)
-      if (typeof window !== 'undefined' && 'caches' in window) {
-        const cacheKeys = await window.caches.keys();
-        await Promise.all(cacheKeys.map((key) => window.caches.delete(key)));
-      }
-
-      // 3. Clear temporary sessionStorage
-      if (typeof window !== 'undefined' && window.sessionStorage) {
-        // Keep admin auth status if user is currently logged in, wipe others
-        const adminAuth = window.sessionStorage.getItem(STORAGE_KEYS.ADMIN_AUTH);
-        window.sessionStorage.clear();
-        if (adminAuth) {
-          window.sessionStorage.setItem(STORAGE_KEYS.ADMIN_AUTH, adminAuth);
-        }
-      }
-
-      // 4. Remove stale business data keys from localStorage
       const staleKeys = [
         STORAGE_KEYS.CATEGORIES,
         STORAGE_KEYS.PACKAGES,
@@ -313,35 +284,22 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         STORAGE_KEYS.PACKAGE_TITLE_FONT_SIZE,
       ];
       staleKeys.forEach((k) => {
-        try {
-          localStorage.removeItem(k);
-        } catch {
-          // ignore
-        }
+        safeStorage.removeItem(k);
       });
     } catch {
       // Non-blocking cleanup
     }
   }, []);
 
-  // Initial Fetch & Automatic Cookies/Site Data Cleaning + Live Admin Revalidation
+  // Initial Fetch & Live Admin Revalidation
   useEffect(() => {
     let isMounted = true;
 
-    // Attach unload listener so cookies/cache are automatically cleaned on every refresh
-    const handleUnload = () => {
-      clearCookiesAndSiteData();
-    };
-    if (typeof window !== 'undefined') {
-      window.addEventListener('beforeunload', handleUnload);
-      window.addEventListener('pagehide', handleUnload);
-    }
+    // Purge any stale client data keys on initial mount
+    clearStaleDataKeys();
 
     const fetchLiveSystem = async () => {
       try {
-        // Automatically clean cookies, cache, and site data
-        await clearCookiesAndSiteData();
-
         const res = await fetch(`/api/system?_t=${Date.now()}`, {
           cache: 'no-store',
           headers: {
@@ -393,12 +351,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     // Immediate execution on mount
     fetchLiveSystem();
 
-    // Clean cookies and site data automatically every 20 seconds to guarantee all recent admin changes are shown
+    // Revalidate live data every 20 seconds so recent admin changes are shown smoothly
     const intervalId = setInterval(() => {
       fetchLiveSystem();
     }, 20000);
 
-    // BroadcastChannel listener for instant cross-tab updates
+    // BroadcastChannel listener for instant cross-tab updates (with Safari safe-check)
     if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
       try {
         broadcastChannelRef.current = new BroadcastChannel('sp_studio_live_sync_v4');
@@ -424,37 +382,37 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           }
         };
       } catch {
-        // Ignore channel setup error
+        // Ignore channel setup error in restricted sandbox
       }
     }
 
     return () => {
       isMounted = false;
       clearInterval(intervalId);
-      if (typeof window !== 'undefined') {
-        window.removeEventListener('beforeunload', handleUnload);
-        window.removeEventListener('pagehide', handleUnload);
-      }
       if (broadcastChannelRef.current) {
-        broadcastChannelRef.current.close();
+        try {
+          broadcastChannelRef.current.close();
+        } catch {
+          // Ignore
+        }
       }
     };
-  }, [clearCookiesAndSiteData]);
+  }, [clearStaleDataKeys]);
 
-  // Sync user client preferences to localStorage
+  // Sync user client preferences to safeStorage (Safari Private Mode compliant)
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.THEME, theme);
+    safeStorage.setItem(STORAGE_KEYS.THEME, theme);
   }, [theme]);
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.CURRENCY, currency);
+    safeStorage.setItem(STORAGE_KEYS.CURRENCY, currency);
   }, [currency]);
 
   useEffect(() => {
     if (savedCustomer) {
-      localStorage.setItem(STORAGE_KEYS.SAVED_CUSTOMER, JSON.stringify(savedCustomer));
+      safeStorage.setItem(STORAGE_KEYS.SAVED_CUSTOMER, JSON.stringify(savedCustomer));
     } else {
-      localStorage.removeItem(STORAGE_KEYS.SAVED_CUSTOMER);
+      safeStorage.removeItem(STORAGE_KEYS.SAVED_CUSTOMER);
     }
   }, [savedCustomer]);
 
@@ -658,11 +616,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   // Admin Auth
   const loginAdmin = (password: string): boolean => {
-    const saved = localStorage.getItem(STORAGE_KEYS.ADMIN_PWD);
+    const saved = safeStorage.getItem(STORAGE_KEYS.ADMIN_PWD);
     const currentPassword = (saved && saved !== 'admin') ? saved : DEFAULT_ADMIN_PASSWORD;
     if (password === currentPassword || password === 'agger100') {
       setIsAdminLoggedIn(true);
-      sessionStorage.setItem(STORAGE_KEYS.ADMIN_AUTH, 'true');
+      safeSession.setItem(STORAGE_KEYS.ADMIN_AUTH, 'true');
       return true;
     }
     return false;
@@ -670,11 +628,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const logoutAdmin = () => {
     setIsAdminLoggedIn(false);
-    sessionStorage.removeItem(STORAGE_KEYS.ADMIN_AUTH);
+    safeSession.removeItem(STORAGE_KEYS.ADMIN_AUTH);
   };
 
   const changeAdminPassword = (oldPass: string, newPass: string): { success: boolean; message: string } => {
-    const saved = localStorage.getItem(STORAGE_KEYS.ADMIN_PWD);
+    const saved = safeStorage.getItem(STORAGE_KEYS.ADMIN_PWD);
     const currentPassword = (saved && saved !== 'admin') ? saved : DEFAULT_ADMIN_PASSWORD;
     if (oldPass !== currentPassword && oldPass !== 'agger100') {
       return { success: false, message: 'Current password is incorrect.' };
@@ -682,18 +640,18 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (newPass.length < 4) {
       return { success: false, message: 'New password must be at least 4 characters.' };
     }
-    localStorage.setItem(STORAGE_KEYS.ADMIN_PWD, newPass);
+    safeStorage.setItem(STORAGE_KEYS.ADMIN_PWD, newPass);
     return { success: true, message: 'Password updated successfully.' };
   };
 
   const resetToDefaults = () => {
-    localStorage.removeItem(STORAGE_KEYS.PACKAGES);
-    localStorage.removeItem(STORAGE_KEYS.CATEGORIES);
-    localStorage.removeItem(STORAGE_KEYS.TERMS);
-    localStorage.removeItem(STORAGE_KEYS.CONTACTS);
-    localStorage.removeItem(STORAGE_KEYS.ORDERS);
-    localStorage.removeItem(STORAGE_KEYS.ADMIN_PWD);
-    localStorage.removeItem(STORAGE_KEYS.PACKAGE_TITLE_FONT_SIZE);
+    safeStorage.removeItem(STORAGE_KEYS.PACKAGES);
+    safeStorage.removeItem(STORAGE_KEYS.CATEGORIES);
+    safeStorage.removeItem(STORAGE_KEYS.TERMS);
+    safeStorage.removeItem(STORAGE_KEYS.CONTACTS);
+    safeStorage.removeItem(STORAGE_KEYS.ORDERS);
+    safeStorage.removeItem(STORAGE_KEYS.ADMIN_PWD);
+    safeStorage.removeItem(STORAGE_KEYS.PACKAGE_TITLE_FONT_SIZE);
     setPackages(packagesData);
     setCategories(defaultCategories);
     setTerms(defaultTerms);

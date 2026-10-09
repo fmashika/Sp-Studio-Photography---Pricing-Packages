@@ -12,7 +12,7 @@ export default defineConfig(() => {
       },
     },
     build: {
-      target: 'esnext',
+      target: ['es2020', 'safari14', 'ios14'],
       cssCodeSplit: true,
       minify: 'esbuild' as const,
       rollupOptions: {

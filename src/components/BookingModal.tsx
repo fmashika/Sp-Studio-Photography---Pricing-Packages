@@ -77,9 +77,14 @@ export const BookingModal: React.FC<BookingModalProps> = ({ pkg, isOpen, onClose
     const encoded = encodeURIComponent(text);
     const cleanWaNumber = (contacts.whatsappNumber || '255743705912').replace(/[^0-9]/g, '');
     
+    const waUrl = `https://wa.me/${cleanWaNumber}?text=${encoded}`;
     setTimeout(() => {
-      window.open(`https://wa.me/${cleanWaNumber}?text=${encoded}`, '_blank');
-    }, 400);
+      try {
+        window.location.href = waUrl;
+      } catch {
+        window.open(waUrl, '_blank');
+      }
+    }, 200);
   };
 
   const handleDirectCall = () => {

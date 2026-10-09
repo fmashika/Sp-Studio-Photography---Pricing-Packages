@@ -53,6 +53,7 @@ export const PackageCard: React.FC<PackageCardProps> = ({
         style={{
           fontFamily: 'Arial, Helvetica, sans-serif',
           WebkitTapHighlightColor: 'transparent',
+          WebkitBackdropFilter: 'blur(20px)',
         }}
         className={`group relative rounded-3xl flex flex-col justify-between transition-all duration-300 p-6 sm:p-7 md:p-8 cursor-pointer select-none overflow-hidden backdrop-blur-xl touch-manipulation active:scale-[0.99] h-full ${
           pkg.featured || isSelected

@@ -86,22 +86,31 @@ function MainLandingPage() {
       }`}
       style={{ fontFamily: 'Arial, Helvetica, sans-serif' }}
     >
-      {/* Background Ambient Lighting */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
+      {/* Background Ambient Lighting - Optimized with radial gradients for 100% iOS Safari WebKit stability */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden z-0" aria-hidden="true">
         <div
-          className={`absolute top-[-180px] right-[-100px] w-[500px] h-[500px] rounded-full blur-[130px] transition-all ${
-            isDark ? 'bg-[#eab308]/4' : 'bg-[#eab308]/10'
-          }`}
+          className="absolute top-[-180px] right-[-100px] w-[500px] h-[500px] rounded-full transition-opacity duration-300"
+          style={{
+            background: isDark
+              ? 'radial-gradient(circle, rgba(234, 179, 8, 0.06) 0%, rgba(234, 179, 8, 0) 70%)'
+              : 'radial-gradient(circle, rgba(234, 179, 8, 0.14) 0%, rgba(234, 179, 8, 0) 70%)',
+          }}
         />
         <div
-          className={`absolute bottom-[-100px] left-[-100px] w-[450px] h-[450px] rounded-full blur-[130px] transition-all ${
-            isDark ? 'bg-[#eab308]/3' : 'bg-[#eab308]/8'
-          }`}
+          className="absolute bottom-[-100px] left-[-100px] w-[450px] h-[450px] rounded-full transition-opacity duration-300"
+          style={{
+            background: isDark
+              ? 'radial-gradient(circle, rgba(234, 179, 8, 0.05) 0%, rgba(234, 179, 8, 0) 70%)'
+              : 'radial-gradient(circle, rgba(234, 179, 8, 0.12) 0%, rgba(234, 179, 8, 0) 70%)',
+          }}
         />
         <div
-          className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[350px] rounded-full blur-[150px] transition-all ${
-            isDark ? 'bg-[#eab308]/2' : 'bg-[#eab308]/6'
-          }`}
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[350px] rounded-full transition-opacity duration-300"
+          style={{
+            background: isDark
+              ? 'radial-gradient(ellipse, rgba(234, 179, 8, 0.04) 0%, rgba(234, 179, 8, 0) 75%)'
+              : 'radial-gradient(ellipse, rgba(234, 179, 8, 0.09) 0%, rgba(234, 179, 8, 0) 75%)',
+          }}
         />
       </div>
 

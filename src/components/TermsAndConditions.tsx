@@ -15,7 +15,12 @@ export const TermsAndConditions: React.FC<TermsAndConditionsProps> = ({ onOpenBo
     const text = encodeURIComponent(
       'Hello Sp Studio, I am reviewing your Terms & Conditions and have a question regarding booking & event coverage.'
     );
-    window.open(`https://wa.me/${contacts.whatsappNumber}?text=${text}`, '_blank');
+    const url = `https://wa.me/${contacts.whatsappNumber}?text=${text}`;
+    try {
+      window.location.href = url;
+    } catch {
+      window.open(url, '_blank');
+    }
   };
 
   return (
